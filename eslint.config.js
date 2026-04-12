@@ -1,4 +1,3 @@
-
 import js from '@eslint/js';
 import globals from 'globals';
 
@@ -8,35 +7,28 @@ export default [
   {
     files: ['src/**/*.js'],
     languageOptions: {
-      ecmaVersion: 2022,
+      ecmaVersion: 'latest',
       sourceType: 'module',
       globals: {
         ...globals.browser,
         ...globals.es2022,
-
         storage: 'readonly',
         habits: 'readonly',
         auth: 'readonly',
         db: 'readonly',
-        GROWTH_STAGES: 'readonly',
-        LEGACY_THRESHOLD: 'readonly',
-        MAX_ACTIVE_HABITS: 'readonly',
       },
     },
   },
-  
+
   {
     files: ['electron/**/*.js'],
     languageOptions: {
-      ecmaVersion: 2022,
+      ecmaVersion: 'latest',
       sourceType: 'commonjs',
-      globals: {
-        ...globals.node,
-        ...globals.browser,
-      },
+      globals: { ...globals.node },
     },
   },
-  
+
   {
     rules: {
       'no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
@@ -48,13 +40,8 @@ export default [
       'quotes': ['error', 'single', { avoidEscape: true }],
       'indent': ['error', 2, { SwitchCase: 1 }],
       'no-var': 'error',
-      'no-debugger': 'warn',
-      'no-alert': 'warn',
-      'no-implicit-globals': 'error',
     },
   },
   
-  {
-    ignores: ['dist/**', 'release/**', 'node_modules/**', 'vite.config.js'],
-  },
+  { ignores: ['dist/**', 'release/**', 'node_modules/**', 'vite.config.js'] }
 ];

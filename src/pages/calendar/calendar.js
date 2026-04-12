@@ -754,9 +754,9 @@ function init() {
   log('Calendar initializing...');
   document.title = `${BRANDING.APP_TITLE} | Calendar`;
   document.querySelectorAll('.footer-version').forEach(el => {
-  el.textContent = BRANDING.FOOTER_TEXT; 
+    el.textContent = BRANDING.FOOTER_TEXT; 
   });
-    updateTranslations();
+  updateTranslations();
   updateTranslations();
   loadEvents();
   initColorSelector();

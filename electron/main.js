@@ -1,9 +1,8 @@
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, ipcMain, shell, dialog } = require('electron');
 const path = require('path');
-const pkg = require('../package.json');
 const fs = require('fs');
+const pkg = require('../package.json');
 const isDev = process.env.NODE_ENV === 'development';
-
 const { Client } = require('discord-rpc');
 
 const DISCORD_CLIENT_ID = '1492849856832606329';
