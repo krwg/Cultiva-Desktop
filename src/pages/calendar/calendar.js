@@ -1,6 +1,7 @@
 import { TRANSLATIONS } from '../../core/i18n.js';
 import { storage } from '../../modules/storage.js';
 import { habits } from '../../modules/habits.js';
+import { BRANDING } from '../../core/branding.js';
 
 // ✅ Убрано window.TRANSLATIONS и window.__CALENDAR_PAGE
 document.documentElement.dataset.page = 'calendar';
@@ -751,6 +752,11 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', syn
 
 function init() {
   log('Calendar initializing...');
+  document.title = `${BRANDING.APP_TITLE} | Calendar`;
+  document.querySelectorAll('.footer-version').forEach(el => {
+  el.textContent = BRANDING.FOOTER_TEXT; 
+  });
+    updateTranslations();
   updateTranslations();
   loadEvents();
   initColorSelector();

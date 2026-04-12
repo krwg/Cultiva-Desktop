@@ -7,7 +7,7 @@ export const BRANDING = {
   CORE_ENGINE: 'CoreV2',         
   HABIT_ENGINE: 'GrowthKit2',      
   DATABASE: 'IDB2',               
-  VERSION: '[0.3.1]',
+  VERSION: '0.3.1',
   CODENAME: 'Sequoia',
   
   KEYS: {
@@ -20,14 +20,10 @@ export const BRANDING = {
   TAGLINE: 'Grow your habits, grow yourself.',
   
   get FOOTER_TEXT() {
-    return `[${this.VERSION}] ${this.CODENAME} Desktop`;
+    return `[${this.VERSION}] ${this.CODENAME} Desktop`; 
   },
-  get APP_TITLE() {
-    return this.APP_NAME;
-  },
-  get BACKUP_PREFIX() {
-    return `${this.APP_NAME.toLowerCase()}-backup`;
-  }
+  get APP_TITLE() { return this.APP_NAME; },
+  get BACKUP_PREFIX() { return `${this.APP_NAME.toLowerCase()}-backup`; }
 };
 
 export const formatVersion = () => `${BRANDING.APP_NAME} ${BRANDING.VERSION} "${BRANDING.CODENAME}" [${BRANDING.CORE_ENGINE}]`;

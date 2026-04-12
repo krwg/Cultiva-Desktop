@@ -1,5 +1,6 @@
-const { app, BrowserWindow, ipcMain, shell, dialog } = require('electron');
+const { app, BrowserWindow } = require('electron');
 const path = require('path');
+const pkg = require('../package.json');
 const fs = require('fs');
 const isDev = process.env.NODE_ENV === 'development';
 
@@ -132,9 +133,9 @@ function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1100,
     height: 800,
+    title: `${pkg.productName || pkg.name} v${pkg.version}`,
     minWidth: 360,
     minHeight: 600,
-    title: 'Cultiva',
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
