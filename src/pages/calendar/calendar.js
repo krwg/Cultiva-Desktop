@@ -1,13 +1,9 @@
-/* ============================================ */
-/* CULTIVA CALENDAR - CORE ENGINE               */
-/* ============================================ */
-
-import { TRANSLATIONS } from '../../main.js';
+import { TRANSLATIONS } from '../../core/i18n.js';
 import { storage } from '../../modules/storage.js';
 import { habits } from '../../modules/habits.js';
 
-window.TRANSLATIONS = TRANSLATIONS;
-window.__CALENDAR_PAGE = true;
+// ✅ Убрано window.TRANSLATIONS и window.__CALENDAR_PAGE
+document.documentElement.dataset.page = 'calendar';
 
 const DEBUG = true;
 const STORAGE_KEY = 'cultiva_calendar_events';
@@ -40,13 +36,8 @@ const GROWTH_STAGES = {
 /* DEBUG                                        */
 /* ============================================ */
 
-function log(...args) {
-    if (DEBUG) console.log('[Calendar]', ...args);
-}
-
-function error(...args) {
-    console.error('[Calendar]', ...args);
-}
+function log(...args) { if (DEBUG) console.log('[Calendar]', ...args); }
+function error(...args) { console.error('[Calendar]', ...args); }
 
 /* ============================================ */
 /* THEME & BACKGROUND SYNC                      */
@@ -71,30 +62,20 @@ function syncTheme() {
 
 function syncBackground() {
     const bg = localStorage.getItem('cultiva-background') || 'none';
-    
     ['aurora', 'rainfall', 'starlight'].forEach(id => {
         const el = document.getElementById(`bg-${id}`);
         if (el) el.style.display = 'none';
     });
-    
     document.body.classList.remove('with-bg-aurora', 'with-bg-rainfall', 'with-bg-starlight');
     
     if (bg === 'none') return;
-    
     const container = document.getElementById(`bg-${bg}`);
     if (container) {
         container.style.display = 'block';
         document.body.classList.add(`with-bg-${bg}`);
-        
-        if (bg === 'rainfall') {
-            generateRaindrops(container);
-        }
-        
-        if (bg === 'starlight') {
-            generateStars(container);
-        }
+        if (bg === 'rainfall') generateRaindrops(container);
+        if (bg === 'starlight') generateStars(container);
     }
-    
     log('Background synced:', bg);
 }
 
@@ -135,31 +116,15 @@ function getTZ() {
 function getTodayInTZ() {
     const now = new Date();
     const tz = getTZ();
-    
-    log('getTodayInTZ: now =', now, 'tz =', tz);
-    
-    if (!tz) {
-        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        log('getTodayInTZ: returning local', today);
-        return today;
-    }
-    
+    if (!tz) return new Date(now.getFullYear(), now.getMonth(), now.getDate());
     try {
-        const formatter = new Intl.DateTimeFormat('en-CA', {
-            timeZone: tz,
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit'
-        });
-        
+        const formatter = new Intl.DateTimeFormat('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' });
         const parts = formatter.formatToParts(now);
-        const year = parseInt(parts.find(p => p.type === 'year').value);
-        const month = parseInt(parts.find(p => p.type === 'month').value) - 1;
-        const day = parseInt(parts.find(p => p.type === 'day').value);
-        
-        const today = new Date(year, month, day);
-        log('getTodayInTZ: returning', today);
-        return today;
+        return new Date(
+            parseInt(parts.find(p => p.type === 'year').value),
+            parseInt(parts.find(p => p.type === 'month').value) - 1,
+            parseInt(parts.find(p => p.type === 'day').value)
+        );
     } catch (e) {
         error('getTodayInTZ failed:', e);
         return new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -168,34 +133,24 @@ function getTodayInTZ() {
 
 function getTodayStr() {
     const tz = getTZ();
-    const now = new Date();
-    return now.toLocaleDateString('en-CA', { timeZone: tz });
+    return new Date().toLocaleDateString('en-CA', { timeZone: tz });
 }
 
 function formatDateKey(date) {
-    if (!date || !(date instanceof Date) || isNaN(date)) {
-        error('formatDateKey: invalid date', date);
-        return '';
-    }
-    
+    if (!date || !(date instanceof Date) || isNaN(date)) return '';
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
-    
     return `${year}-${month}-${day}`;
 }
 
 function formatDateTime(date) {
-    if (!date || !(date instanceof Date) || isNaN(date)) {
-        return '';
-    }
-    
+    if (!date || !(date instanceof Date) || isNaN(date)) return '';
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     const hours = String(date.getHours()).padStart(2, '0');
     const minutes = String(date.getMinutes()).padStart(2, '0');
-    
     return `${year}-${month}-${day}T${hours}:${minutes}`;
 }
 
@@ -207,20 +162,12 @@ function parseDateTime(dateStr, timeStr) {
 
 function formatMonth(date) {
     if (!date || isNaN(date)) return '';
-    return date.toLocaleString(currentLang === 'ru' ? 'ru-RU' : 'en-US', { 
-        month: 'long', 
-        year: 'numeric' 
-    });
+    return date.toLocaleString(currentLang === 'ru' ? 'ru-RU' : 'en-US', { month: 'long', year: 'numeric' });
 }
 
 function formatFullDate(date) {
     if (!date || isNaN(date)) return '';
-    return date.toLocaleString(currentLang === 'ru' ? 'ru-RU' : 'en-US', { 
-        weekday: 'long', 
-        month: 'long', 
-        day: 'numeric', 
-        year: 'numeric' 
-    });
+    return date.toLocaleString(currentLang === 'ru' ? 'ru-RU' : 'en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
 }
 
 function getStartOfWeek(date) {
@@ -242,9 +189,7 @@ function loadEvents() {
             events = JSON.parse(stored);
             log('Events loaded:', Object.keys(events).length, 'days');
         }
-    } catch (e) {
-        error('Failed to load events:', e);
-    }
+    } catch (e) { error('Failed to load events:', e); }
 }
 
 function saveEvents() {
@@ -255,7 +200,6 @@ function saveEvents() {
 function addEvent(date, event) {
     const key = formatDateKey(date);
     if (!key) return null;
-    
     if (!events[key]) events[key] = [];
     event.id = crypto.randomUUID?.() || Date.now().toString() + Math.random();
     events[key].push(event);
@@ -268,10 +212,8 @@ function addEvent(date, event) {
 function updateEvent(date, eventId, updates) {
     const key = formatDateKey(date);
     if (!key || !events[key]) return false;
-    
     const event = events[key].find(e => e.id === eventId);
     if (!event) return false;
-    
     Object.assign(event, updates);
     events[key].sort((a, b) => a.start.localeCompare(b.start));
     saveEvents();
@@ -282,7 +224,6 @@ function updateEvent(date, eventId, updates) {
 function deleteEvent(date, eventId) {
     const key = formatDateKey(date);
     if (!key || !events[key]) return false;
-    
     events[key] = events[key].filter(e => e.id !== eventId);
     if (events[key].length === 0) delete events[key];
     saveEvents();
@@ -298,34 +239,25 @@ function getHabitsForDate(date) {
     try {
         const allHabits = habits.getAll();
         const dateStr = formatDateKey(date);
-        
-        return allHabits
-            .filter(h => {
-                if (h.trackType === 'binary') {
-                    return h.lastCompleted === dateStr;
-                } else {
-                    return (h.dailyProgress?.[dateStr] || 0) >= h.target;
-                }
-            })
-            .map(h => {
-                let stageEmoji = '🌱';
-                if (h.progress >= 365) stageEmoji = '🌟';
-                else if (h.progress >= 50) stageEmoji = '🌳';
-                else if (h.progress >= 21) stageEmoji = '🪴';
-                else if (h.progress >= 7) stageEmoji = '🌿';
-                
-                return {
-                    id: `habit-${h.id}`,
-                    title: `${stageEmoji} ${h.name}`,
-                    color: '#34C759',
-                    isHabit: true,
-                    habit: h
-                };
-            });
-    } catch (e) {
-        error('getHabitsForDate failed:', e);
-        return [];
-    }
+        return allHabits.filter(h => {
+            if (h.trackType === 'binary') return h.lastCompleted === dateStr;
+            return (h.dailyProgress?.[dateStr] || 0) >= h.target;
+        }).map(h => {
+            let stageEmoji = '🌱';
+            if (h.progress >= 365) stageEmoji = '🌟';
+            else if (h.progress >= 50) stageEmoji = '🌳';
+            else if (h.progress >= 21) stageEmoji = '🪴';
+            else if (h.progress >= 7) stageEmoji = '🌿';
+            
+            return {
+                id: `habit-${h.id}`,
+                title: `${stageEmoji} ${h.name}`,
+                color: '#34C759',
+                isHabit: true,
+                habit: h
+            };
+        });
+    } catch (e) { error('getHabitsForDate failed:', e); return []; }
 }
 
 /* ============================================ */
@@ -334,7 +266,6 @@ function getHabitsForDate(date) {
 
 function renderMonthView() {
     log('renderMonthView');
-    
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
     
@@ -344,22 +275,15 @@ function renderMonthView() {
     const firstDay = new Date(year, month, 1);
     let firstDayOfWeek = firstDay.getDay();
     const startOffset = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1;
-    
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     const prevMonthDays = new Date(year, month, 0).getDate();
     
     const container = document.getElementById('month-days');
-    if (!container) {
-        error('month-days container not found');
-        return;
-    }
-    
+    if (!container) { error('month-days container not found'); return; }
     container.innerHTML = '';
     
     const todayStr = getTodayStr();
     const selectedStr = formatDateKey(selectedDate);
-    
-    log('Month params:', { year, month, startOffset, daysInMonth, todayStr });
     
     for (let i = startOffset - 1; i >= 0; i--) {
         const day = prevMonthDays - i;
@@ -372,7 +296,6 @@ function renderMonthView() {
         const dateStr = formatDateKey(date);
         const isToday = dateStr === todayStr;
         const isSelected = dateStr === selectedStr;
-        
         const cell = createMonthDayElement(day, false, date);
         if (isToday) cell.classList.add('today');
         if (isSelected) cell.classList.add('selected');
@@ -384,18 +307,14 @@ function renderMonthView() {
         if (allEvents.length > 0) {
             const eventsContainer = document.createElement('div');
             eventsContainer.className = 'month-events';
-            
-            const colors = [...new Set(allEvents.map(e => e.color))].slice(0, 3);
-            colors.forEach(color => {
+            [...new Set(allEvents.map(e => e.color))].slice(0, 3).forEach(color => {
                 const dot = document.createElement('div');
                 dot.className = 'month-event-dot';
                 dot.style.background = color;
                 eventsContainer.appendChild(dot);
             });
-            
             cell.appendChild(eventsContainer);
         }
-        
         container.appendChild(cell);
     }
     
@@ -405,8 +324,6 @@ function renderMonthView() {
         const date = new Date(year, month + 1, day);
         container.appendChild(createMonthDayElement(day, true, date));
     }
-    
-    log('Month rendered:', container.children.length, 'cells');
 }
 
 function createMonthDayElement(day, isOther, date) {
@@ -415,12 +332,8 @@ function createMonthDayElement(day, isOther, date) {
     cell.textContent = day;
     cell.addEventListener('click', () => {
         selectedDate = new Date(date);
-        log('Day clicked:', formatDateKey(selectedDate));
-        if (currentView === 'month') {
-            switchView('day');
-        } else {
-            renderCurrentView();
-        }
+        if (currentView === 'month') switchView('day');
+        else renderCurrentView();
     });
     return cell;
 }
@@ -431,7 +344,6 @@ function createMonthDayElement(day, isOther, date) {
 
 function renderWeekView() {
     log('renderWeekView');
-    
     const startOfWeek = getStartOfWeek(currentDate);
     const endOfWeek = new Date(startOfWeek);
     endOfWeek.setDate(startOfWeek.getDate() + 6);
@@ -440,7 +352,6 @@ function renderWeekView() {
     if (titleEl) {
         titleEl.textContent = `${startOfWeek.toLocaleString(currentLang === 'ru' ? 'ru-RU' : 'en-US', { month: 'short', day: 'numeric' })} – ${endOfWeek.toLocaleString(currentLang === 'ru' ? 'ru-RU' : 'en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
     }
-    
     renderWeekHeader(startOfWeek);
     renderWeekTimeline(startOfWeek);
 }
@@ -448,7 +359,6 @@ function renderWeekView() {
 function renderWeekHeader(startOfWeek) {
     const header = document.getElementById('week-header');
     if (!header) return;
-    
     header.innerHTML = '';
     const todayStr = getTodayStr();
     
@@ -464,10 +374,7 @@ function renderWeekHeader(startOfWeek) {
             <div class="week-day-name">${day.toLocaleString(currentLang === 'ru' ? 'ru-RU' : 'en-US', { weekday: 'short' })}</div>
             <div class="week-day-date">${day.getDate()}</div>
         `;
-        dayEl.addEventListener('click', () => {
-            selectedDate = new Date(day);
-            switchView('day');
-        });
+        dayEl.addEventListener('click', () => { selectedDate = new Date(day); switchView('day'); });
         header.appendChild(dayEl);
     }
 }
@@ -475,7 +382,6 @@ function renderWeekHeader(startOfWeek) {
 function renderWeekTimeline(startOfWeek) {
     const timeline = document.getElementById('week-timeline');
     if (!timeline) return;
-    
     timeline.innerHTML = '';
     
     const weekEvents = [];
@@ -483,22 +389,13 @@ function renderWeekTimeline(startOfWeek) {
         const day = new Date(startOfWeek);
         day.setDate(startOfWeek.getDate() + i);
         const dateStr = formatDateKey(day);
-        
-        if (events[dateStr]) {
-            events[dateStr].forEach(event => {
-                weekEvents.push({ ...event, date: day, dateStr });
-            });
-        }
-        
-        getHabitsForDate(day).forEach(habit => {
-            weekEvents.push({ ...habit, date: day, dateStr });
-        });
+        if (events[dateStr]) events[dateStr].forEach(event => weekEvents.push({ ...event, date: day, dateStr }));
+        getHabitsForDate(day).forEach(habit => weekEvents.push({ ...habit, date: day, dateStr }));
     }
     
     for (let hour = 0; hour < 24; hour++) {
         const hourEl = document.createElement('div');
         hourEl.className = 'timeline-hour';
-        
         const timeLabel = document.createElement('div');
         timeLabel.className = 'timeline-time';
         timeLabel.textContent = `${hour.toString().padStart(2, '0')}:00`;
@@ -511,74 +408,51 @@ function renderWeekTimeline(startOfWeek) {
         for (let i = 0; i < 7; i++) {
             const day = new Date(startOfWeek);
             day.setDate(startOfWeek.getDate() + i);
-            
             const slot = document.createElement('div');
             slot.className = 'timeline-slot';
             slot.dataset.date = formatDateKey(day);
             slot.dataset.hour = hour;
-            
             slot.addEventListener('click', () => {
                 const clickDate = new Date(day);
                 clickDate.setHours(hour, 0, 0);
                 openEventPanel(clickDate);
             });
-            
             slots.appendChild(slot);
         }
-        
         hourEl.appendChild(slots);
         timeline.appendChild(hourEl);
     }
     
-    weekEvents.forEach(event => {
-        if (event.isHabit) {
-            renderWeekHabitEvent(event, startOfWeek);
-        } else {
-            renderWeekEvent(event, startOfWeek);
-        }
-    });
+    weekEvents.forEach(event => event.isHabit ? renderWeekHabitEvent(event, startOfWeek) : renderWeekEvent(event, startOfWeek));
 }
 
 function renderWeekEvent(event, startOfWeek) {
     const eventDate = new Date(event.date);
     const dayIndex = Math.floor((eventDate - startOfWeek) / (1000 * 60 * 60 * 24));
-    
     if (dayIndex < 0 || dayIndex > 6) return;
     
     const [startHour, startMin] = event.start.split(':').map(Number);
     const [endHour, endMin] = event.end.split(':').map(Number);
-    
     const duration = (endHour * 60 + endMin) - (startHour * 60 + startMin);
     const height = Math.max(24, (duration / 60) * 60);
     
     const timeline = document.getElementById('week-timeline');
     const hourElements = timeline.querySelectorAll('.timeline-hour');
-    
     const startHourEl = hourElements[startHour];
     if (!startHourEl) return;
     
     const slots = startHourEl.querySelector('.timeline-slots');
     const slot = slots.children[dayIndex];
-    
     if (!slot) return;
     
     const eventEl = document.createElement('div');
     eventEl.className = 'week-event';
     eventEl.style.background = event.color || EVENT_COLORS[0];
-    eventEl.style.top = `${(startMin)}px`;
+    eventEl.style.top = `${startMin}px`;
     eventEl.style.height = `${height}px`;
     eventEl.style.zIndex = 10 + dayIndex;
-    
-    eventEl.innerHTML = `
-        <div class="week-event-title">${event.title}</div>
-        <div class="week-event-time">${event.start} – ${event.end}</div>
-    `;
-    
-    eventEl.addEventListener('click', (e) => {
-        e.stopPropagation();
-        openEventPanel(eventDate, event);
-    });
-    
+    eventEl.innerHTML = `<div class="week-event-title">${event.title}</div><div class="week-event-time">${event.start} – ${event.end}</div>`;
+    eventEl.addEventListener('click', (e) => { e.stopPropagation(); openEventPanel(eventDate, event); });
     slot.style.position = 'relative';
     slot.appendChild(eventEl);
 }
@@ -586,18 +460,15 @@ function renderWeekEvent(event, startOfWeek) {
 function renderWeekHabitEvent(habit, startOfWeek) {
     const habitDate = new Date(habit.date);
     const dayIndex = Math.floor((habitDate - startOfWeek) / (1000 * 60 * 60 * 24));
-    
     if (dayIndex < 0 || dayIndex > 6) return;
     
     const timeline = document.getElementById('week-timeline');
     const hourElements = timeline.querySelectorAll('.timeline-hour');
-    
     const hourEl = hourElements[0];
     if (!hourEl) return;
     
     const slots = hourEl.querySelector('.timeline-slots');
     const slot = slots.children[dayIndex];
-    
     if (!slot) return;
     
     const habitEl = document.createElement('div');
@@ -606,9 +477,7 @@ function renderWeekHabitEvent(habit, startOfWeek) {
     habitEl.style.top = '2px';
     habitEl.style.height = '20px';
     habitEl.style.zIndex = 5;
-    
     habitEl.innerHTML = `<div class="week-event-title">${habit.title}</div>`;
-    
     slot.style.position = 'relative';
     slot.appendChild(habitEl);
 }
@@ -619,23 +488,16 @@ function renderWeekHabitEvent(habit, startOfWeek) {
 
 function renderDayView() {
     log('renderDayView');
-    
     const titleEl = document.getElementById('calendar-title');
     if (titleEl) titleEl.textContent = formatMonth(currentDate);
     
     const dateEl = document.getElementById('day-view-date');
-    if (dateEl) dateEl.textContent = selectedDate.toLocaleString(currentLang === 'ru' ? 'ru-RU' : 'en-US', {
-        month: 'long', day: 'numeric', year: 'numeric'
-    });
-    
+    if (dateEl) dateEl.textContent = selectedDate.toLocaleString(currentLang === 'ru' ? 'ru-RU' : 'en-US', { month: 'long', day: 'numeric', year: 'numeric' });
     const weekdayEl = document.getElementById('day-view-weekday');
-    if (weekdayEl) weekdayEl.textContent = selectedDate.toLocaleString(currentLang === 'ru' ? 'ru-RU' : 'en-US', {
-        weekday: 'long'
-    });
+    if (weekdayEl) weekdayEl.textContent = selectedDate.toLocaleString(currentLang === 'ru' ? 'ru-RU' : 'en-US', { weekday: 'long' });
     
     const timeline = document.getElementById('day-timeline');
     if (!timeline) return;
-    
     timeline.innerHTML = '';
     
     const dateStr = formatDateKey(selectedDate);
@@ -645,7 +507,6 @@ function renderDayView() {
     if (habitEvents.length > 0) {
         const allDaySection = document.createElement('div');
         allDaySection.className = 'all-day-section';
-        
         habitEvents.forEach(habit => {
             const habitEl = document.createElement('div');
             habitEl.className = 'all-day-event';
@@ -653,65 +514,45 @@ function renderDayView() {
             habitEl.textContent = habit.title;
             allDaySection.appendChild(habitEl);
         });
-        
         timeline.appendChild(allDaySection);
     }
     
     for (let hour = 0; hour < 24; hour++) {
         const hourEl = document.createElement('div');
         hourEl.className = 'day-hour';
-        
         const timeLabel = document.createElement('div');
         timeLabel.className = 'day-time';
         timeLabel.textContent = `${hour.toString().padStart(2, '0')}:00`;
         hourEl.appendChild(timeLabel);
-        
         const slot = document.createElement('div');
         slot.className = 'day-slot';
         slot.dataset.hour = hour;
-        
         slot.addEventListener('click', () => {
             const clickDate = new Date(selectedDate);
             clickDate.setHours(hour, 0, 0);
             openEventPanel(clickDate);
         });
-        
         hourEl.appendChild(slot);
         timeline.appendChild(hourEl);
     }
     
-    dayEvents.forEach(event => {
-        renderDayEvent(event);
-    });
+    dayEvents.forEach(event => renderDayEvent(event));
 }
 
 function renderDayEvent(event) {
-    const [startHour, startMin] = event.start.split(':').map(Number);
-    
+    const [startHour] = event.start.split(':').map(Number);
     const timeline = document.getElementById('day-timeline');
     const hourElements = timeline.querySelectorAll('.day-hour');
-    
     const startHourEl = hourElements[startHour];
     if (!startHourEl) return;
-    
     const slot = startHourEl.querySelector('.day-slot');
     if (!slot) return;
     
     const eventEl = document.createElement('div');
     eventEl.className = 'day-event';
     eventEl.style.background = event.color || EVENT_COLORS[0];
-    
-    eventEl.innerHTML = `
-        <div class="day-event-title">${event.title}</div>
-        <div class="day-event-time">${event.start} – ${event.end}</div>
-        ${event.notes ? `<div class="day-event-notes">${event.notes}</div>` : ''}
-    `;
-    
-    eventEl.addEventListener('click', (e) => {
-        e.stopPropagation();
-        openEventPanel(selectedDate, event);
-    });
-    
+    eventEl.innerHTML = `<div class="day-event-title">${event.title}</div><div class="day-event-time">${event.start} – ${event.end}</div>${event.notes ? `<div class="day-event-notes">${event.notes}</div>` : ''}`;
+    eventEl.addEventListener('click', (e) => { e.stopPropagation(); openEventPanel(selectedDate, event); });
     slot.appendChild(eventEl);
 }
 
@@ -722,31 +563,23 @@ function renderDayEvent(event) {
 function initColorSelector() {
     const selector = document.getElementById('event-color-selector');
     if (!selector) return;
-    
     selector.innerHTML = '';
-    
     EVENT_COLORS.forEach(color => {
         const option = document.createElement('div');
         option.className = 'color-option';
         option.style.background = color;
         option.dataset.color = color;
-        
         option.addEventListener('click', () => {
-            document.querySelectorAll('.color-option').forEach(opt => {
-                opt.classList.remove('selected');
-            });
+            document.querySelectorAll('.color-option').forEach(opt => opt.classList.remove('selected'));
             option.classList.add('selected');
         });
-        
         selector.appendChild(option);
     });
-    
     selector.children[0]?.classList.add('selected');
 }
 
 function openEventPanel(date, existingEvent = null) {
     log('openEventPanel', formatDateKey(date), existingEvent?.title);
-    
     editingEventDate = date;
     editingEventId = existingEvent?.id || null;
     
@@ -761,9 +594,7 @@ function openEventPanel(date, existingEvent = null) {
     const endDateTime = new Date(date);
     endDateTime.setHours(endDateTime.getHours() + 1);
     
-    if (title) {
-        title.textContent = existingEvent ? (currentT.editEvent || 'Edit Event') : (currentT.newEvent || 'New Event');
-    }
+    if (title) title.textContent = existingEvent ? (currentT.editEvent || 'Edit Event') : (currentT.newEvent || 'New Event');
     
     if (existingEvent) {
         if (titleInput) titleInput.value = existingEvent.title || '';
@@ -771,21 +602,14 @@ function openEventPanel(date, existingEvent = null) {
         if (endInput) endInput.value = formatDateTime(parseDateTime(formatDateKey(date), existingEvent.end));
         if (notesInput) notesInput.value = existingEvent.notes || '';
         if (deleteBtn) deleteBtn.style.display = 'block';
-        
-        const colorOpts = document.querySelectorAll('.color-option');
-        colorOpts.forEach(opt => {
-            opt.classList.toggle('selected', opt.dataset.color === existingEvent.color);
-        });
+        document.querySelectorAll('.color-option').forEach(opt => opt.classList.toggle('selected', opt.dataset.color === existingEvent.color));
     } else {
         if (titleInput) titleInput.value = '';
         if (startInput) startInput.value = formatDateTime(startDateTime);
         if (endInput) endInput.value = formatDateTime(endDateTime);
         if (notesInput) notesInput.value = '';
         if (deleteBtn) deleteBtn.style.display = 'none';
-        
-        document.querySelectorAll('.color-option').forEach((opt, i) => {
-            opt.classList.toggle('selected', i === 0);
-        });
+        document.querySelectorAll('.color-option').forEach((opt, i) => opt.classList.toggle('selected', i === 0));
     }
     
     const panel = document.getElementById('event-panel');
@@ -803,14 +627,9 @@ function closeEventPanel() {
 function saveEvent() {
     const titleInput = document.getElementById('event-title');
     const title = titleInput?.value.trim();
-    
-    if (!title) {
-        alert(currentT.enterTitle || 'Please enter a title');
-        return;
-    }
+    if (!title) { alert(currentT.enterTitle || 'Please enter a title'); return; }
     
     const selectedColor = document.querySelector('.color-option.selected')?.dataset.color || EVENT_COLORS[0];
-    
     const startInput = document.getElementById('event-start');
     const endInput = document.getElementById('event-end');
     const notesInput = document.getElementById('event-notes');
@@ -826,46 +645,33 @@ function saveEvent() {
         color: selectedColor
     };
     
-    if (editingEventId) {
-        updateEvent(editingEventDate, editingEventId, eventData);
-    } else {
-        addEvent(editingEventDate, eventData);
-    }
+    if (editingEventId) updateEvent(editingEventDate, editingEventId, eventData);
+    else addEvent(editingEventDate, eventData);
     
     closeEventPanel();
     renderCurrentView();
 }
 
 /* ============================================ */
-/* VIEW SWITCHING                               */
+/* VIEW SWITCHING & NAVIGATION                  */
 /* ============================================ */
 
 function switchView(view) {
     log('switchView:', view);
     currentView = view;
-    
-    document.querySelectorAll('.view-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.view === view);
-    });
-    
+    document.querySelectorAll('.view-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.view === view));
     document.getElementById('month-view')?.classList.toggle('active', view === 'month');
     document.getElementById('week-view')?.classList.toggle('active', view === 'week');
     document.getElementById('day-view')?.classList.toggle('active', view === 'day');
-    
     renderCurrentView();
 }
 
 function renderCurrentView() {
     log('renderCurrentView:', currentView);
-    
     if (currentView === 'month') renderMonthView();
     else if (currentView === 'week') renderWeekView();
     else if (currentView === 'day') renderDayView();
 }
-
-/* ============================================ */
-/* NAVIGATION                                   */
-/* ============================================ */
 
 function goToToday() {
     log('goToToday');
@@ -876,34 +682,22 @@ function goToToday() {
 
 function goPrevious() {
     log('goPrevious');
-    
-    if (currentView === 'month') {
-        currentDate.setMonth(currentDate.getMonth() - 1);
-    } else if (currentView === 'week') {
-        currentDate.setDate(currentDate.getDate() - 7);
-    } else {
-        currentDate.setDate(currentDate.getDate() - 1);
-        selectedDate = new Date(currentDate);
-    }
+    if (currentView === 'month') currentDate.setMonth(currentDate.getMonth() - 1);
+    else if (currentView === 'week') currentDate.setDate(currentDate.getDate() - 7);
+    else { currentDate.setDate(currentDate.getDate() - 1); selectedDate = new Date(currentDate); }
     renderCurrentView();
 }
 
 function goNext() {
     log('goNext');
-    
-    if (currentView === 'month') {
-        currentDate.setMonth(currentDate.getMonth() + 1);
-    } else if (currentView === 'week') {
-        currentDate.setDate(currentDate.getDate() + 7);
-    } else {
-        currentDate.setDate(currentDate.getDate() + 1);
-        selectedDate = new Date(currentDate);
-    }
+    if (currentView === 'month') currentDate.setMonth(currentDate.getMonth() + 1);
+    else if (currentView === 'week') currentDate.setDate(currentDate.getDate() + 7);
+    else { currentDate.setDate(currentDate.getDate() + 1); selectedDate = new Date(currentDate); }
     renderCurrentView();
 }
 
 /* ============================================ */
-/* I18N                                         */
+/* I18N & INIT                                  */
 /* ============================================ */
 
 function updateTranslations() {
@@ -914,23 +708,16 @@ function updateTranslations() {
 
 function applyI18n() {
     updateTranslations();
-    
     document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.dataset.i18n;
         if (currentT[key]) {
-            if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
-                el.placeholder = currentT[key];
-            } else {
-                el.textContent = currentT[key];
-            }
+            if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') el.placeholder = currentT[key];
+            else el.textContent = currentT[key];
         }
     });
-    
     document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
         const key = el.dataset.i18nPlaceholder;
-        if (currentT[key]) {
-            el.placeholder = currentT[key];
-        }
+        if (currentT[key]) el.placeholder = currentT[key];
     });
     
     const weekdayOrder = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
@@ -940,25 +727,33 @@ function applyI18n() {
     });
     
     const panelTitle = document.getElementById('event-panel-title');
-    if (panelTitle) {
-        const isEditing = editingEventId !== null;
-        panelTitle.textContent = isEditing ? (currentT.editEvent || 'Edit Event') : (currentT.newEvent || 'New Event');
-    }
-    
-    log('I18n applied');
+    if (panelTitle) panelTitle.textContent = editingEventId !== null ? (currentT.editEvent || 'Edit Event') : (currentT.newEvent || 'New Event');
 }
 
-/* ============================================ */
-/* INITIALIZATION                               */
-/* ============================================ */
+// ✅ Debounced storage sync
+let renderTimeout;
+window.addEventListener('storage', (e) => {
+    const relevantKeys = ['cultiva_calendar_events', 'cultiva-lang', 'cultiva-theme', 'cultiva-background', 'cultiva-timezone'];
+    if (!relevantKeys.includes(e.key)) return;
+    
+    clearTimeout(renderTimeout);
+    renderTimeout = setTimeout(() => {
+        if (e.key === 'cultiva-lang') applyI18n();
+        if (e.key === 'cultiva-theme') syncTheme();
+        if (e.key === 'cultiva-background') syncBackground();
+        if (e.key === 'cultiva_calendar_events') loadEvents();
+        if (e.key === 'cultiva-timezone') goToToday();
+        renderCurrentView();
+    }, 150);
+});
+
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', syncTheme);
 
 function init() {
     log('Calendar initializing...');
-    
     updateTranslations();
     loadEvents();
     initColorSelector();
-
     syncTheme();
     syncBackground();
     
@@ -966,12 +761,7 @@ function init() {
     currentDate = todayDate;
     selectedDate = todayDate;
     
-    log('Initial dates:', { currentDate, selectedDate });
-    
-    document.querySelectorAll('.view-btn').forEach(btn => {
-        btn.addEventListener('click', () => switchView(btn.dataset.view));
-    });
-    
+    document.querySelectorAll('.view-btn').forEach(btn => btn.addEventListener('click', () => switchView(btn.dataset.view)));
     document.getElementById('prev-period')?.addEventListener('click', goPrevious);
     document.getElementById('next-period')?.addEventListener('click', goNext);
     document.getElementById('today-btn')?.addEventListener('click', goToToday);
@@ -988,55 +778,18 @@ function init() {
     });
     
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && document.getElementById('event-panel')?.classList.contains('active')) {
-            closeEventPanel();
-        }
+        if (e.key === 'Escape' && document.getElementById('event-panel')?.classList.contains('active')) closeEventPanel();
     });
-    
     document.getElementById('event-panel')?.addEventListener('click', (e) => {
-        if (e.target === document.getElementById('event-panel')) {
-            closeEventPanel();
-        }
+        if (e.target === document.getElementById('event-panel')) closeEventPanel();
     });
-    
     document.getElementById('event-title')?.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && e.ctrlKey) {
-            saveEvent();
-        }
+        if (e.key === 'Enter' && e.ctrlKey) saveEvent();
     });
     
     renderMonthView();
     applyI18n();
-    
     log('Calendar initialized');
 }
 
 init();
-
-window.addEventListener('storage', (e) => {
-    log('Storage event:', e.key);
-    
-    if (e.key === 'cultiva-lang') {
-        applyI18n();
-        renderCurrentView();
-    }
-
-    if (e.key === 'cultiva-theme') {
-        syncTheme();
-    }
-    
-    if (e.key === 'cultiva-background') {
-        syncBackground();
-    }
-    
-    if (e.key === STORAGE_KEY) {
-        loadEvents();
-        renderCurrentView();
-    }
-    
-    if (e.key === 'cultiva-timezone') {
-        goToToday();
-    }
-});
-
-window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', syncTheme);

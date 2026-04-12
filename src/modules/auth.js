@@ -5,26 +5,40 @@ let _currentUser = null;
 
 async function hashPassword(password, salt) {
   const encoder = new TextEncoder();
-  const data = encoder.encode(salt + password);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const keyMaterial = await crypto.subtle.importKey(
+    'raw', encoder.encode(password), { name: 'PBKDF2' }, false, ['deriveBits']
+  );
+  
+  const hashBuffer = await crypto.subtle.deriveBits(
+    { name: 'PBKDF2', hash: 'SHA-256', salt: encoder.encode(salt), iterations: 100000 },
+    keyMaterial, 256
+  );
+  
   return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
 function generateSalt() {
-  return Array.from(crypto.getRandomValues(new Uint8Array(16))).map(b => b.toString(16).padStart(2, '0')).join('');
+  return Array.from(crypto.getRandomValues(new Uint8Array(16)))
+    .map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
 export const auth = {
   init: async function() {
     if (_currentUser) return;
-    const session = await db.get('sessions', SESSION_KEY);
-    if (session && session.email) {
-      _currentUser = await db.get('users', session.email);
+    try {
+      const session = await db.get('sessions', SESSION_KEY);
+      if (session && session.email) {
+        _currentUser = await db.get('users', session.email);
+      }
+    } catch (e) {
+      console.warn('[Auth] Session init failed:', e);
     }
   },
 
   register: async function({ email, password, name, dob }) {
     if (!email || typeof email !== 'string') throw new Error('Invalid email');
+    if (password.length < 6) throw new Error('Password must be at least 6 characters');
+    
     const existing = await db.get('users', email);
     if (existing) throw new Error('User already exists');
 
@@ -71,7 +85,7 @@ export const auth = {
   },
 
   logout: async function() {
-    await db.clear('sessions');
+    try { await db.clear('sessions'); } catch(e) {}
     _currentUser = null;
     if (typeof storage !== 'undefined' && storage.setCurrentUser) {
       await storage.setCurrentUser(null);
@@ -92,7 +106,7 @@ export const auth = {
     await db.put('users', _currentUser);
 
     if (updates.avatar && typeof storage !== 'undefined') {
-      const currentSettings = storage.get('cultiva-settings') || {};
+      const currentSettings = (await storage.get('cultiva-settings')) || {};
       currentSettings.avatar = updates.avatar;
       await storage.set('cultiva-settings', currentSettings);
     }
@@ -101,6 +115,7 @@ export const auth = {
   },
 
   _sanitizeUser: function(user) {
+    if (!user) return null;
     const { passwordHash, salt, ...safeUser } = user;
     return safeUser;
   }

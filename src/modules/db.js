@@ -9,19 +9,25 @@ export const db = {
       
       request.onupgradeneeded = (e) => {
         const db = e.target.result;
+        const oldVersion = e.oldVersion || 0;
 
-        const stores = ['habits', 'settings', 'users', 'sessions'];
-        stores.forEach(name => {
-          if (db.objectStoreNames.contains(name)) db.deleteObjectStore(name);
-        });
+        // Безопасное создание хранилищ без удаления существующих данных
+        if (!db.objectStoreNames.contains('habits')) {
+          const store = db.createObjectStore('habits', { keyPath: 'id' });
+          store.createIndex('userId', 'userId', { unique: false });
+          store.createIndex('updatedAt', 'updatedAt', { unique: false });
+        } else if (oldVersion < 5) {
+          const tx = db.transaction('habits', 'readwrite');
+          const habitsStore = tx.objectStore('habits');
+          if (!habitsStore.indexNames.contains('userId')) habitsStore.createIndex('userId', 'userId', { unique: false });
+          if (!habitsStore.indexNames.contains('updatedAt')) habitsStore.createIndex('updatedAt', 'updatedAt', { unique: false });
+        }
 
-        const habitsStore = db.createObjectStore('habits', { keyPath: 'id' });
-        habitsStore.createIndex('userId', 'userId', { unique: false });
-        habitsStore.createIndex('updatedAt', 'updatedAt', { unique: false });
+        if (!db.objectStoreNames.contains('settings')) db.createObjectStore('settings', { keyPath: 'key' });
+        if (!db.objectStoreNames.contains('users')) db.createObjectStore('users', { keyPath: 'email' });
+        if (!db.objectStoreNames.contains('sessions')) db.createObjectStore('sessions', { keyPath: 'key' });
 
-        db.createObjectStore('settings', { keyPath: 'key' });
-        db.createObjectStore('users', { keyPath: 'email' });
-        db.createObjectStore('sessions', { keyPath: 'key' });
+        console.log(`[DB] Upgraded from v${oldVersion} to v${DB_VERSION} safely`);
       };
       
       request.onsuccess = (e) => resolve(e.target.result);

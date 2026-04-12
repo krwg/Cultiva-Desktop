@@ -1,8 +1,12 @@
 import { auth } from './modules/auth.js'; 
+import { TRANSLATIONS } from './core/i18n.js';
 import './styles/main.css';
 import { GROWTH_STAGES, LEGACY_THRESHOLD, MAX_ACTIVE_HABITS } from './core/config.js';
 import { storage } from './modules/storage.js';
 import { habits } from './modules/habits.js';
+
+let currentLang = 'en';
+let currentT = TRANSLATIONS.en;
 
 /* ============================================ */
 /* DOM ELEMENTS                                 */
@@ -86,9 +90,6 @@ let settings = {
     avatar: { background: 'green', emoji: '🌱' }
 };
 
-let currentLang = 'en';
-let currentT = {};
-
 /* ============================================ */
 /* AVATAR DATA                                  */
 /* ============================================ */
@@ -138,184 +139,6 @@ const AVATAR_DATA = {
 };
 
 let tempAvatar = { ...settings.avatar };
-
-/* ============================================ */
-/* i18n TRANSLATIONS                            */
-/* ============================================ */
-const TRANSLATIONS = {
-    en: {
-        backBtn: 'Back', calendar: 'Calendar', whatsNew: "What's New",
-        footerHome: 'Home', footerAbout: 'About', footerChangelog: "What's New",
-        footerShortcuts: 'Shortcuts', footerTips: 'Tips', footerPrivacy: 'Privacy',
-        sun: 'Sun', mon: 'Mon', tue: 'Tue', wed: 'Wed', thu: 'Thu', fri: 'Fri', sat: 'Sat',
-        guest: 'Guest', guestUser: 'Guest User', localStorage: 'Local Storage',
-        settings: 'Settings', activeGarden: 'Active Garden', trophyGarden: 'Trophy Garden',
-        trophyDesc: 'Trees that reached 365+ days', addHabit: 'Plant New Habit',
-        habitName: 'Name', description: 'Description (optional)', category: 'Category',
-        tracking: 'Tracking', yesNo: 'Yes / No', quantity: 'Quantity', goal: 'Goal', unit: 'Unit',
-        plantSeed: 'Plant Seed', stage: 'Stage', days: 'd', completions: 'completions',
-        emptyGarden: 'Your garden is empty', plantFirst: 'Plant first habit',
-        habitPlanted: 'Habit planted!', progressSaved: 'Progress saved!',
-        removed: 'Removed', exported: 'Exported!', imported: 'Imported!',
-        resetDone: 'Data cleared!', changeAvatar: 'Change Avatar',
-        seed: 'Seed', sprout: 'Sprout', plant: 'Plant', tree: 'Tree', legacy: 'Legacy',
-        legacyDesc: '365 days of mindfulness',
-        done: 'Done', activity: 'Activity', less: 'Less', more: 'More',
-        currentStreak: 'Current Streak', bestStreak: 'Best Streak',
-        completion: 'Completion', log: 'Log', complete: 'Complete',
-        appearance: 'Appearance', language: 'Language',
-        languageDesc: 'Interface language', theme: 'Theme',
-        themeDesc: 'Choose your preferred look', showTrophy: 'Show Trophy Garden',
-        showTrophyDesc: 'Display completed trees (365+ days)',
-        focusMode: 'Focus Mode', focusModeDesc: 'Minimal UI for distraction-free tracking',
-        data: 'Data', export: 'Export', exportDesc: 'Download backup as JSON',
-        exportBtn: 'Export', import: 'Import', importDesc: 'Restore from file',
-        importBtn: 'Import', reset: 'Reset', resetDesc: 'Delete all data',
-        resetBtn: 'Reset',
-        holidayRegion: 'Holiday Region', holidayRegionDesc: 'Show public holidays for your country',
-        timeFormat: 'Time Format', timeFormatDesc: '12h or 24h clock',
-        timezone: 'Timezone', timezoneDesc: 'Fix calendar & habit timestamps',
-        categories: {
-            health: 'Health', learning: 'Learning', work: 'Work', mindfulness: 'Mindfulness',
-            creative: 'Creative', fitness: 'Fitness', social: 'Social', finance: 'Finance',
-            hobby: 'Hobby', family: 'Family', career: 'Career', spiritual: 'Spiritual',
-            environment: 'Environment', other: 'Other'
-        },
-        month: 'Month', week: 'Week', day: 'Day',
-        newEvent: 'New Event', editEvent: 'Edit Event',
-        title: 'Title', color: 'Color', start: 'Start', end: 'End', notes: 'Notes',
-        eventName: 'Event name', addNotes: 'Add notes...',
-        delete: 'Delete', cancel: 'Cancel', save: 'Save',
-        enterTitle: 'Please enter a title', confirmDelete: 'Delete this event?',
-        themeEvergreen: 'Evergreen', themeBlossom: 'Blossom',
-        themeOcean: 'Ocean', themeSunset: 'Sunset',
-        themePink: 'Pink', themeMoon: 'Moon',
-        background: 'Background', backgroundDesc: 'Add atmosphere to your garden',
-        backgroundNone: 'None', backgroundAurora: 'Aurora Garden',
-        backgroundRainfall: 'Rainfall', backgroundStarlight: 'Starlight',
-        profile: 'Profile', gardenSettings: 'Garden', calendarTime: 'Calendar',
-        dataStorage: 'Data', notifications: 'Notifications', aboutHelp: 'About',
-        updates: 'Updates', comingSoon: 'Coming soon...',
-        selectSetting: 'Select a setting', selectSettingDesc: 'Choose a category from the sidebar',
-        avatarDesc: 'Customize your profile picture',
-        editProfile: 'Edit Profile', editProfileDesc: 'Change your name, email, or password',
-        accountStatus: 'Account Status', accountActive: 'Account Active',
-        active: 'Active', localStorageMode: 'Local Storage Mode',
-        memberSince: 'Member Since', displayName: 'Display Name',
-        email: 'Email', dateOfBirth: 'Date of Birth',
-        newPassword: 'New Password (optional)', confirmPassword: 'Confirm New Password',
-        saveChanges: 'Save Changes', dangerZone: 'Danger Zone',
-        signOut: 'Sign Out', signOutDesc: 'Return to local storage mode',
-        signIn: 'Sign In', signInDesc: 'Sync your data across devices',
-        nameRequired: 'Display name is required', emailRequired: 'Email is required',
-        passwordsMismatch: 'Passwords do not match', passwordTooShort: 'Password must be at least 6 characters',
-        profileUpdated: 'Profile updated successfully',
-        confirmSignOut: 'Sign out of your account?', signedOut: 'Signed out successfully',
-        tipsDesc: 'Get the most out of Cultiva', privacyDesc: 'How we handle your data',
-        changelogDesc: 'See latest updates',
-        dev: 'Dev',
-        privacy: "Privacy",
-        discord: 'Discord',
-        discordRichPresence: 'Discord Rich Presence',
-        discordRichPresenceDesc: 'Show your garden activity on Discord',
-        discordStatus: 'Status',
-        discordPreview: 'Preview',
-        discordPreviewDesc: 'What others see on Discord',
-        discordMustBeRunning: 'Discord must be running on your computer',
-        discordConnected: 'Connected',
-        discordDisconnected: 'Disconnected',
-        discordDisabled: 'Disabled',
-        discordChecking: 'Checking...',
-    },
-    ru: {
-        backBtn: 'Назад', calendar: 'Календарь', whatsNew: 'Что нового',
-        footerHome: 'Главная', footerAbout: 'О проекте', footerChangelog: 'Что нового',
-        footerShortcuts: 'Клавиши', footerTips: 'Советы', footerPrivacy: 'Приватность',
-        sun: 'Вс', mon: 'Пн', tue: 'Вт', wed: 'Ср', thu: 'Чт', fri: 'Пт', sat: 'Сб',
-        guest: 'Гость', guestUser: 'Гостевой пользователь', localStorage: 'Локальное хранилище',
-        settings: 'Настройки', activeGarden: 'Активный сад', trophyGarden: 'Сад трофеев',
-        trophyDesc: 'Деревья, достигшие 365+ дней', addHabit: 'Посадить привычку',
-        habitName: 'Название', description: 'Описание (необязательно)', category: 'Категория',
-        tracking: 'Отслеживание', yesNo: 'Да / Нет', quantity: 'Количество', goal: 'Цель', unit: 'Единица',
-        plantSeed: 'Посадить', stage: 'Стадия', days: 'д', completions: 'вып.',
-        emptyGarden: 'Ваш сад пуст', plantFirst: 'Посадить первую привычку',
-        habitPlanted: 'Привычка посажена!', progressSaved: 'Прогресс сохранён!',
-        removed: 'Удалено', exported: 'Экспортировано!', imported: 'Импортировано!',
-        resetDone: 'Данные очищены!', changeAvatar: 'Изменить аватар',
-        seed: 'Семя', sprout: 'Росток', plant: 'Растение', tree: 'Дерево', legacy: 'Наследие',
-        legacyDesc: '365 дней осознанности',
-        done: 'Готово', activity: 'Активность', less: 'Меньше', more: 'Больше',
-        currentStreak: 'Текущая серия', bestStreak: 'Лучшая серия',
-        completion: 'Выполнение', log: 'Записать', complete: 'Выполнено',
-        appearance: 'Оформление', language: 'Язык',
-        languageDesc: 'Язык интерфейса', theme: 'Тема',
-        themeDesc: 'Выберите оформление', showTrophy: 'Показывать сад трофеев',
-        showTrophyDesc: 'Отображать завершённые деревья (365+ дней)',
-        focusMode: 'Режим фокуса', focusModeDesc: 'Минимальный интерфейс без отвлечений',
-        data: 'Данные', export: 'Экспорт', exportDesc: 'Скачать резервную копию',
-        exportBtn: 'Экспорт', import: 'Импорт', importDesc: 'Восстановить из файла',
-        importBtn: 'Импорт', reset: 'Сброс', resetDesc: 'Удалить все данные',
-        resetBtn: 'Сброс',
-        holidayRegion: 'Регион праздников', holidayRegionDesc: 'Показывать государственные праздники вашей страны',
-        timeFormat: 'Формат времени', timeFormatDesc: '12-часовой или 24-часовой',
-        timezone: 'Часовой пояс', timezoneDesc: 'Синхронизировать время привычек и календаря',
-        categories: {
-            health: 'Здоровье', learning: 'Обучение', work: 'Работа', mindfulness: 'Осознанность',
-            creative: 'Творчество', fitness: 'Спорт', social: 'Общение', finance: 'Финансы',
-            hobby: 'Хобби', family: 'Семья', career: 'Карьера', spiritual: 'Духовное',
-            environment: 'Экология', other: 'Другое'
-        },
-        month: 'Месяц', week: 'Неделя', day: 'День',
-        newEvent: 'Новое событие', editEvent: 'Редактировать',
-        title: 'Название', color: 'Цвет', start: 'Начало', end: 'Конец', notes: 'Заметки',
-        eventName: 'Название события', addNotes: 'Добавить заметки...',
-        delete: 'Удалить', cancel: 'Отмена', save: 'Сохранить',
-        enterTitle: 'Введите название', confirmDelete: 'Удалить событие?',
-        themeEvergreen: 'Вечнозелёный', themeBlossom: 'Цветение',
-        themeOcean: 'Океан', themeSunset: 'Закат',
-        themePink: 'Розовый', themeMoon: 'Лунный',
-        background: 'Фон', backgroundDesc: 'Добавь атмосферы в свой сад',
-        backgroundNone: 'Без фона', backgroundAurora: 'Северное сияние',
-        backgroundRainfall: 'Дождь в саду', backgroundStarlight: 'Звёздная ночь',
-        profile: 'Профиль', gardenSettings: 'Сад', calendarTime: 'Календарь',
-        dataStorage: 'Данные', notifications: 'Уведомления', aboutHelp: 'О приложении',
-        updates: 'Обновления', comingSoon: 'Скоро...',
-        selectSetting: 'Выберите настройку', selectSettingDesc: 'Выберите категорию из бокового меню',
-        avatarDesc: 'Настройте изображение профиля',
-        editProfile: 'Редактировать профиль', editProfileDesc: 'Изменить имя, email или пароль',
-        accountStatus: 'Статус аккаунта', accountActive: 'Аккаунт активен',
-        active: 'Активен', localStorageMode: 'Локальный режим',
-        memberSince: 'Участник с', displayName: 'Отображаемое имя',
-        email: 'Email', dateOfBirth: 'Дата рождения',
-        newPassword: 'Новый пароль (необязательно)', confirmPassword: 'Подтвердите пароль',
-        saveChanges: 'Сохранить изменения', dangerZone: 'Опасная зона',
-        signOut: 'Выйти', signOutDesc: 'Вернуться в локальный режим',
-        signIn: 'Войти', signInDesc: 'Синхронизируйте данные между устройствами',
-        nameRequired: 'Имя обязательно', emailRequired: 'Email обязателен',
-        passwordsMismatch: 'Пароли не совпадают', passwordTooShort: 'Пароль должен быть не менее 6 символов',
-        profileUpdated: 'Профиль обновлён',
-        confirmSignOut: 'Выйти из аккаунта?', signedOut: 'Вы вышли из аккаунта',
-        tipsDesc: 'Как получить максимум от Cultiva', privacyDesc: 'Как мы обрабатываем ваши данные',
-        changelogDesc: 'Последние обновления',
-        dev: 'Разработка',
-        privacy: "Политика конфиденциальности",
-        discord: 'Discord',
-        discordRichPresence: 'Discord Rich Presence',
-        discordRichPresenceDesc: 'Показывать активность в саду в Discord',
-        discordStatus: 'Статус',
-        discordPreview: 'Предпросмотр',
-        discordPreviewDesc: 'Что видят другие в Discord',
-        discordMustBeRunning: 'Discord должен быть запущен на компьютере',
-        discordConnected: 'Подключено',
-        discordDisconnected: 'Отключено',
-        discordDisabled: 'Выключено',
-        discordChecking: 'Проверка...',
-    }
-};
-
-currentT = TRANSLATIONS.en;
-
-export { TRANSLATIONS };
 
 /* ============================================ */
 /* SETTINGS LOGIC                               */
@@ -556,13 +379,8 @@ function applyBackground(bg) {
         container.style.display = 'block';
         document.body.classList.add(`with-bg-${bg}`);
         
-        if (bg === 'rainfall') {
-            generateRaindrops(container);
-        }
-        
-        if (bg === 'starlight') {
-            generateStars(container);
-        }
+        if (bg === 'rainfall') generateRaindrops(container);
+        if (bg === 'starlight') generateStars(container);
     }
 }
 
@@ -620,13 +438,9 @@ function initSettingsNavigation() {
             });
             
             const targetSection = document.getElementById(`section-${section}`);
-            if (targetSection) {
-                targetSection.classList.add('active');
-            }
+            if (targetSection) targetSection.classList.add('active');
             
-            if (section === 'profile') {
-                updateProfileSection();
-            }
+            if (section === 'profile') updateProfileSection();
         });
     });
     
@@ -657,8 +471,6 @@ function initSettingsNavigation() {
     });
 }
 
-
-
 /* ============================================ */
 /* PROFILE MANAGEMENT                           */
 /* ============================================ */
@@ -674,18 +486,12 @@ function updateProfileSection() {
     
     if (avatarContainer) {
         if (settings.avatar?.photo) {
-            if (avatarImg) {
-                avatarImg.src = settings.avatar.photo;
-                avatarImg.style.display = 'block';
-            }
+            if (avatarImg) { avatarImg.src = settings.avatar.photo; avatarImg.style.display = 'block'; }
             if (avatarEmoji) avatarEmoji.style.display = 'none';
             avatarContainer.style.background = 'transparent';
         } else {
             if (avatarImg) avatarImg.style.display = 'none';
-            if (avatarEmoji) {
-                avatarEmoji.style.display = 'flex';
-                avatarEmoji.textContent = settings.avatar?.emoji || '🌱';
-            }
+            if (avatarEmoji) { avatarEmoji.style.display = 'flex'; avatarEmoji.textContent = settings.avatar?.emoji || '🌱'; }
             
             const bg = AVATAR_DATA.backgrounds.find(b => b.id === settings.avatar?.background);
             avatarContainer.style.background = (bg && bg.id !== 'none') ? bg.css : 'linear-gradient(135deg, var(--accent-purple), var(--accent-pink))';
@@ -708,22 +514,14 @@ function updateProfileSection() {
     
     if (isLoggedIn) {
         if (accountStatus) accountStatus.textContent = t.accountActive || 'Account Active';
-        if (statusBadge) {
-            statusBadge.textContent = t.active || 'Active';
-            statusBadge.classList.add('online');
-        }
+        if (statusBadge) { statusBadge.textContent = t.active || 'Active'; statusBadge.classList.add('online'); }
     } else {
         if (accountStatus) accountStatus.textContent = t.localStorageMode || 'Local Storage Mode';
-        if (statusBadge) {
-            statusBadge.textContent = t.guest || 'Guest';
-            statusBadge.classList.remove('online');
-        }
+        if (statusBadge) { statusBadge.textContent = t.guest || 'Guest'; statusBadge.classList.remove('online'); }
     }
     
     const editProfileBtn = document.getElementById('settings-edit-profile');
-    if (editProfileBtn) {
-        editProfileBtn.style.display = isLoggedIn ? 'flex' : 'none';
-    }
+    if (editProfileBtn) editProfileBtn.style.display = isLoggedIn ? 'flex' : 'none';
     
     const memberSinceRow = document.getElementById('profile-member-since');
     const memberDate = document.getElementById('profile-member-date');
@@ -732,9 +530,7 @@ function updateProfileSection() {
         if (memberSinceRow) memberSinceRow.style.display = 'flex';
         if (memberDate) {
             const date = new Date(user.createdAt);
-            memberDate.textContent = date.toLocaleDateString(currentLang === 'ru' ? 'ru-RU' : 'en-US', {
-                year: 'numeric', month: 'long', day: 'numeric'
-            });
+            memberDate.textContent = date.toLocaleDateString(currentLang === 'ru' ? 'ru-RU' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' });
         }
     } else {
         if (memberSinceRow) memberSinceRow.style.display = 'none';
@@ -786,29 +582,10 @@ function initProfileManagement() {
         const newPassword = document.getElementById('edit-new-password').value;
         const confirmPassword = document.getElementById('edit-confirm-password').value;
         
-        if (!displayName) {
-            editProfileError.textContent = currentT.nameRequired || 'Display name is required';
-            editProfileError.style.display = 'block';
-            return;
-        }
-        
-        if (!email) {
-            editProfileError.textContent = currentT.emailRequired || 'Email is required';
-            editProfileError.style.display = 'block';
-            return;
-        }
-        
-        if (newPassword && newPassword !== confirmPassword) {
-            editProfileError.textContent = currentT.passwordsMismatch || 'Passwords do not match';
-            editProfileError.style.display = 'block';
-            return;
-        }
-        
-        if (newPassword && newPassword.length < 6) {
-            editProfileError.textContent = currentT.passwordTooShort || 'Password must be at least 6 characters';
-            editProfileError.style.display = 'block';
-            return;
-        }
+        if (!displayName) { editProfileError.textContent = currentT.nameRequired || 'Display name is required'; editProfileError.style.display = 'block'; return; }
+        if (!email) { editProfileError.textContent = currentT.emailRequired || 'Email is required'; editProfileError.style.display = 'block'; return; }
+        if (newPassword && newPassword !== confirmPassword) { editProfileError.textContent = currentT.passwordsMismatch || 'Passwords do not match'; editProfileError.style.display = 'block'; return; }
+        if (newPassword && newPassword.length < 6) { editProfileError.textContent = currentT.passwordTooShort || 'Password must be at least 6 characters'; editProfileError.style.display = 'block'; return; }
         
         try {
             const updates = { name: displayName, email: email, dob: dob || null };
@@ -823,10 +600,7 @@ function initProfileManagement() {
             
             showNotification(currentT.profileUpdated || 'Profile updated successfully');
         } catch (err) {
-            if (editProfileError) {
-                editProfileError.textContent = err.message || 'Failed to update profile';
-                editProfileError.style.display = 'block';
-            }
+            if (editProfileError) { editProfileError.textContent = err.message || 'Failed to update profile'; editProfileError.style.display = 'block'; }
         }
     });
     
@@ -1006,17 +780,13 @@ function initAvatarPicker() {
 /* ============================================ */
 
 function showNotification(icon, text, subText = '', actionText = '', actionCallback = null) {
-    if (arguments.length === 1) {
-        text = icon;
-        icon = '';
-    }
+    if (arguments.length === 1) { text = icon; icon = ''; }
     
     const existing = document.querySelector('.dynamic-notification');
     if (existing) existing.remove();
     
     const notification = document.createElement('div');
     notification.className = 'dynamic-notification';
-    
     const iconHtml = icon ? `<span class="dynamic-notification-icon">${icon}</span>` : '';
     
     notification.innerHTML = `
@@ -1061,7 +831,6 @@ function createHabitCard(habit, isTrophy = false) {
     const t = TRANSLATIONS[settings.lang];
     const categoryName = habit.category ? (t.categories?.[habit.category] || habit.category) : '';
     const categoryBadge = categoryName ? `<span class="category-badge" data-i18n-category="${habit.category}">${categoryName}</span>` : '';
-    
     const streakText = habit.currentStreak > 0 ? ` • 🔥 ${habit.currentStreak}` : '';
     
     const card = document.createElement('article');
@@ -1106,7 +875,7 @@ function renderGarden() {
         trophyEl.innerHTML = '';
         trophies.forEach(h => trophyEl.appendChild(createHabitCard(h, true)));
     }
-    if (countEl) countEl.textContent = `${active.length}/9`;
+    if (countEl) countEl.textContent = `${active.length}/${MAX_ACTIVE_HABITS}`;
     if (trophyCountEl) trophyCountEl.textContent = trophies.length;
     applyTranslations(settings.lang);
 }
@@ -1200,11 +969,8 @@ async function updateAuthUI() {
     let dropdownDisplay = 'Guest User';
     
     if (isLoggedIn && user) {
-        if (user.name && user.name.trim() !== '') {
-            displayName = user.name;
-        } else if (user.email) {
-            displayName = user.email.split('@')[0];
-        }
+        if (user.name && user.name.trim() !== '') displayName = user.name;
+        else if (user.email) displayName = user.email.split('@')[0];
         dropdownDisplay = user.email || 'User';
     }
     
@@ -1236,11 +1002,8 @@ async function updateAuthUI() {
             dropAvatarLarge.style.background = (bg && bg.id !== 'none') ? bg.css : 'linear-gradient(135deg, var(--accent-purple), var(--accent-pink))';
         }
     }
-    if (isLoggedIn) {
-        document.body.classList.add('authenticated');
-    } else {
-        document.body.classList.remove('authenticated');
-    }
+    if (isLoggedIn) document.body.classList.add('authenticated');
+    else document.body.classList.remove('authenticated');
 
     renderHeaderAvatar();
     updateProfileSection();
@@ -1269,14 +1032,12 @@ async function handleAuthSubmit(e, type) {
     }
 
     try {
-        if (type === 'login') {
-            await auth.login({ email, password });
-        } else {
+        if (type === 'login') await auth.login({ email, password });
+        else {
             const nameInput = document.getElementById('reg-name');
             const dobInput = document.getElementById('reg-dob');
             await auth.register({
-                email,
-                password,
+                email, password,
                 name: nameInput ? nameInput.value.trim() : '',
                 dob: dobInput ? dobInput.value : null
             });
@@ -1284,10 +1045,9 @@ async function handleAuthSubmit(e, type) {
         
         await updateAuthUI();
         closeModal(authModal);
-        showNotification( type === 'login' ? 'Welcome back!' : 'Account created!');
+        showNotification(type === 'login' ? 'Welcome back!' : 'Account created!');
         
-        emailInput.value = '';
-        passInput.value = '';
+        emailInput.value = ''; passInput.value = '';
         const nameInput = document.getElementById('reg-name');
         const dobInput = document.getElementById('reg-dob');
         if (nameInput) nameInput.value = '';
@@ -1405,11 +1165,7 @@ function initEvents() {
 
     authTrigger?.addEventListener('click', () => { openModal(authModal); closeUserMenu(); });
     signOutBtn?.addEventListener('click', async () => { 
-        await auth.logout(); 
-        await updateAuthUI(); 
-        renderGarden(); 
-        closeUserMenu(); 
-        showNotification('Signed out'); 
+        await auth.logout(); await updateAuthUI(); renderGarden(); closeUserMenu(); showNotification('Signed out'); 
     });
     authModal?.querySelector('.modal-close')?.addEventListener('click', () => closeModal(authModal));
     authModal?.querySelector('.modal-overlay')?.addEventListener('click', () => closeModal(authModal));
@@ -1429,7 +1185,6 @@ function toggleFocusMode(enabled) {
     storage.set('cultiva-settings', settings);
     renderGarden();
 }
-
 
 /* ============================================ */
 /* DISCORD SETTINGS UI (DESKTOP ONLY)           */
@@ -1460,7 +1215,6 @@ function initDiscordSettings() {
   
   async function checkDiscordStatus() {
     if (!window.discord) return;
-    
     try {
       const status = await window.discord.getStatus();
       const enabled = discordToggle?.checked || false;
@@ -1493,17 +1247,13 @@ function initDiscordSettings() {
   
   function updatePreviewTime() {
     if (!previewTime || !sessionStartTime) return;
-    
     const elapsed = Math.floor((new Date() - sessionStartTime) / 1000);
     const hours = Math.floor(elapsed / 3600);
     const minutes = Math.floor((elapsed % 3600) / 60);
     const seconds = elapsed % 60;
     
-    if (hours > 0) {
-      previewTime.textContent = `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')} elapsed`;
-    } else {
-      previewTime.textContent = `${minutes}:${seconds.toString().padStart(2, '0')} elapsed`;
-    }
+    if (hours > 0) previewTime.textContent = `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')} elapsed`;
+    else previewTime.textContent = `${minutes}:${seconds.toString().padStart(2, '0')} elapsed`;
   }
   
   function updatePreviewText(details, state) {
@@ -1607,10 +1357,8 @@ async function init() {
     try {
         await storage.init();
         await auth.init();
-        
         await loadSettings();
         applySettings();
-        
         renderGarden();
         initEvents();
         initAvatarPicker();
@@ -1620,7 +1368,6 @@ async function init() {
         await updateAuthUI();
         updateCultivaDatePreview();
         updateProfileSection();
-        
         console.log('Cultiva [0.3.1] initialized');
     } catch (err) {
         console.error('Init failed:', err);
@@ -1634,3 +1381,5 @@ if (document.readyState === 'complete' || document.readyState === 'interactive')
         setTimeout(() => { init(); hideLoading(); }, 100);
     });
 }
+
+export { TRANSLATIONS };
