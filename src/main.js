@@ -3,6 +3,7 @@ import { TRANSLATIONS } from './core/i18n.js';
 import './styles/main.css';
 import { GROWTH_STAGES, LEGACY_THRESHOLD, MAX_ACTIVE_HABITS } from './core/config.js';
 import { storage } from './modules/storage.js';
+import { BRANDING } from './core/branding.js';
 import { habits } from './modules/habits.js';
 
 let currentLang = 'en';
@@ -76,6 +77,13 @@ function getLocalISOString(dateObj) {
   const m = parts.find(p => p.type === 'month').value;
   const d = parts.find(p => p.type === 'day').value;
   return `${y}-${m}-${d}`;
+}
+
+function applyBranding() {
+  document.title = `${BRANDING.APP_TITLE} | Home`;
+  document.querySelectorAll('.footer-version').forEach(el => {
+    el.textContent = BRANDING.FOOTER_TEXT;
+  });
 }
 
 /* ============================================ */
@@ -1357,6 +1365,7 @@ async function init() {
   try {
     await storage.init();
     await auth.init();
+    applyBranding();
     await loadSettings();
     applySettings();
     renderGarden();

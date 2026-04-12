@@ -8,18 +8,20 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "prebuild": "node scripts/sync-version.mjs",
+    "preversion": "node scripts/sync-version.mjs",
+    "lint": "eslint src/ electron/",
+    "lint:fix": "eslint src/ electron/ --fix",
     "electron:dev": "npm run build && cross-env NODE_ENV=development VITE_DEV_SERVER_URL=http://localhost:3000 electron .",
     "electron:dev:watch": "concurrently \"vite\" \"wait-on http://localhost:3000 && cross-env NODE_ENV=development VITE_DEV_SERVER_URL=http://localhost:3000 electron .\"",
     "electron:build": "npm run build && electron-builder",
-    "postinstall": "electron-builder install-app-deps",
-    "lint": "eslint src/ electron/",
-    "lint:fix": "eslint src/ electron/ --fix"
+    "postinstall": "electron-builder install-app-deps"
   },
   "build": {
     "appId": "com.cultiva.app",
     "productName": "Cultiva",
     "directories": {
-      "output": "release",
+      "output": "release",  
       "buildResources": "public"
     },
     "files": [
