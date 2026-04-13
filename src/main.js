@@ -87,7 +87,7 @@ function applyBranding() {
   
   const aboutVersion = document.getElementById('about-version-display');
   if (aboutVersion) {
-    aboutVersion.textContent = `Version [${BRANDING.VERSION}] ${BRANDING.CODENAME}`;
+    aboutVersion.textContent = `Version [${BRANDING.VERSION}] ${BRANDING.CODENAME} Desktop`;
   }
 }
 
@@ -205,10 +205,11 @@ function applySettings() {
   if (langSelect) {langSelect.value = settings.lang;}
   applyTranslations(settings.lang);
     
-  document.body.classList.remove(
+ document.body.classList.remove(
     'theme-light', 'theme-dark', 'theme-pink', 'theme-moon',
-    'theme-evergreen', 'theme-blossom', 'theme-ocean', 'theme-sunset'
-  );
+    'theme-evergreen', 'theme-blossom', 'theme-ocean', 'theme-sunset',
+    'theme-frost', 'theme-cedar', 'theme-dusk', 'theme-meadow'
+);
     
   let appliedTheme = settings.theme;
   if (appliedTheme === 'auto') {
@@ -366,9 +367,11 @@ if (tzSelect) {
 
 const bgSelect = document.getElementById('bg-select');
 const bgContainers = {
-  aurora: document.getElementById('bg-aurora'),
-  rainfall: document.getElementById('bg-rainfall'),
-  starlight: document.getElementById('bg-starlight')
+    aurora: document.getElementById('bg-aurora'),
+    rainfall: document.getElementById('bg-rainfall'),
+    starlight: document.getElementById('bg-starlight'),
+    snowfall: document.getElementById('bg-snowfall'),
+    fireflies: document.getElementById('bg-fireflies')
 };
 
 const savedBg = localStorage.getItem('cultiva-background') || 'none';
@@ -382,19 +385,24 @@ bgSelect?.addEventListener('change', (e) => {
 });
 
 function applyBackground(bg) {
-  Object.values(bgContainers).forEach(el => { if (el) {el.style.display = 'none';} });
-  document.body.classList.remove('with-bg-aurora', 'with-bg-rainfall', 'with-bg-starlight');
+    Object.values(bgContainers).forEach(el => { if (el) el.style.display = 'none'; });
+    document.body.classList.remove(
+        'with-bg-aurora', 'with-bg-rainfall', 'with-bg-starlight',
+        'with-bg-snowfall', 'with-bg-fireflies'
+    );
     
-  if (bg === 'none') {return;}
+    if (bg === 'none') return;
     
-  const container = bgContainers[bg];
-  if (container) {
-    container.style.display = 'block';
-    document.body.classList.add(`with-bg-${bg}`);
+    const container = bgContainers[bg];
+    if (container) {
+        container.style.display = 'block';
+        document.body.classList.add(`with-bg-${bg}`);
         
-    if (bg === 'rainfall') {generateRaindrops(container);}
-    if (bg === 'starlight') {generateStars(container);}
-  }
+        if (bg === 'rainfall') generateRaindrops(container);
+        if (bg === 'starlight') generateStars(container);
+        if (bg === 'snowfall') generateSnowflakes(container);
+        if (bg === 'fireflies') generateFireflies(container);
+    }
 }
 
 function generateRaindrops(container) {
@@ -420,6 +428,34 @@ function generateStars(container) {
     star.style.animationDuration = `${2 + Math.random() * 4}s`;
     container.appendChild(star);
   }
+}
+
+function generateSnowflakes(container) {
+    container.innerHTML = '';
+    const snowflakes = ['❄️', '❅', '❆', '✻', '✼', '❉'];
+    for (let i = 0; i < 40; i++) {
+        const flake = document.createElement('div');
+        flake.className = 'snowflake';
+        flake.textContent = snowflakes[Math.floor(Math.random() * snowflakes.length)];
+        flake.style.left = `${Math.random() * 100}%`;
+        flake.style.fontSize = `${0.8 + Math.random() * 1.5}em`;
+        flake.style.animationDelay = `${Math.random() * 5}s`;
+        flake.style.animationDuration = `${5 + Math.random() * 7}s`;
+        container.appendChild(flake);
+    }
+}
+
+function generateFireflies(container) {
+    container.innerHTML = '';
+    for (let i = 0; i < 25; i++) {
+        const fly = document.createElement('div');
+        fly.className = 'firefly';
+        fly.style.left = `${Math.random() * 100}%`;
+        fly.style.top = `${20 + Math.random() * 60}%`;
+        fly.style.animationDelay = `${Math.random() * 8}s`;
+        fly.style.animationDuration = `${6 + Math.random() * 10}s`;
+        container.appendChild(fly);
+    }
 }
 
 /* ============================================ */
@@ -975,11 +1011,11 @@ let updateStatus = {
 function updateUpdatesSection() {
     const isElectron = typeof window.electron !== 'undefined';
     
-    // Обновляем отображение текущей версии
+
     const versionDisplay = document.getElementById('current-version-display');
     const codenameDisplay = document.getElementById('current-codename-display');
     
-    // Берем версию из BRANDING (если доступно) или из package.json через electron
+
     if (versionDisplay) {
         versionDisplay.textContent = BRANDING?.VERSION || '0.3.1';
     }
@@ -993,12 +1029,12 @@ function updateUpdatesSection() {
         return;
     }
     
-    // Подписываемся на сообщения об обновлениях
+
     if (window.electron.onUpdateMessage) {
         window.electron.onUpdateMessage((message) => {
             console.log('[Updater]', message);
             
-            // Парсим сообщения от updater
+
             if (message.includes('Checking for updates')) {
                 updateStatusCard('checking', 'Checking...', message);
             } else if (message.includes('Update') && message.includes('found')) {
@@ -1030,16 +1066,16 @@ function updateUpdatesSection() {
         });
     }
     
-    // Загружаем информацию о релизах с GitHub
+
     fetchReleaseInfo();
     
-    // Обработчик кнопки проверки обновлений
+
     document.getElementById('check-updates-btn')?.addEventListener('click', () => {
         if (updateStatus.state === 'downloaded') {
-            // Если обновление уже скачано, перезапускаем
+
             window.electron.restartApp?.();
         } else {
-            // Иначе проверяем обновления
+
             window.electron.checkForUpdates?.();
             updateStatusCard('checking', 'Checking for updates...', 'Contacting GitHub...');
         }
@@ -1102,9 +1138,22 @@ function updateDownloadProgress(percent, message) {
 async function fetchReleaseInfo() {
     const releaseInfo = document.getElementById('release-info');
     if (!releaseInfo) return;
+
+    const cached = localStorage.getItem('cultiva-releases-cache');
+    const cacheTime = localStorage.getItem('cultiva-releases-cache-time');
+    
+    if (cached && cacheTime && (Date.now() - parseInt(cacheTime)) < 3600000) {
+        renderReleases(JSON.parse(cached));
+        return;
+    }
     
     try {
         const response = await fetch('https://api.github.com/repos/krwg/CultivaDesktop/releases');
+        
+        if (!response.ok) {
+            throw new Error(`GitHub API error: ${response.status}`);
+        }
+        
         const releases = await response.json();
         
         if (!Array.isArray(releases) || releases.length === 0) {
@@ -1112,47 +1161,66 @@ async function fetchReleaseInfo() {
             return;
         }
         
-        // Показываем последние 3 релиза
-        const latestReleases = releases.slice(0, 3);
+        localStorage.setItem('cultiva-releases-cache', JSON.stringify(releases));
+        localStorage.setItem('cultiva-releases-cache-time', Date.now().toString());
         
-        releaseInfo.innerHTML = latestReleases.map((release, index) => {
-            const date = new Date(release.published_at).toLocaleDateString(
-                currentLang === 'ru' ? 'ru-RU' : 'en-US',
-                { year: 'numeric', month: 'short', day: 'numeric' }
-            );
-            
-            const isLatest = index === 0 && !release.prerelease;
-            const badge = isLatest ? '<span class="release-badge latest">Latest</span>' :
-                         release.prerelease ? '<span class="release-badge prerelease">Pre-release</span>' : '';
-            
-            // Очищаем markdown (простая замена)
-            let body = release.body || 'No description';
-            body = body.replace(/[#*`]/g, '').substring(0, 200);
-            
-            return `
-                <div class="release-item">
-                    <div class="release-header">
-                        <span class="release-tag">${release.name || release.tag_name}</span>
-                        ${badge}
-                        <span class="release-date">${date}</span>
-                    </div>
-                    <div class="release-body" id="release-${release.id}">
-                        ${body}...
-                    </div>
-                    <button class="release-expand" onclick="window.open('${release.html_url}', '_blank')">
-                        View on GitHub →
-                    </button>
-                </div>
-            `;
-        }).join('');
+        renderReleases(releases);
         
     } catch (error) {
         console.error('Failed to fetch releases:', error);
-        releaseInfo.innerHTML = '<div class="release-loading">Failed to load releases</div>';
+        
+        if (cached) {
+            renderReleases(JSON.parse(cached));
+            return;
+        }
+        
+        releaseInfo.innerHTML = `
+            <div class="release-loading">
+                Failed to load releases<br>
+                <a href="#" onclick="window.open('https://github.com/krwg/CultivaDesktop/releases', '_blank'); return false;" style="color: var(--accent-blue);">
+                    View on GitHub →
+                </a>
+            </div>
+        `;
     }
 }
 
-
+function renderReleases(releases) {
+    const releaseInfo = document.getElementById('release-info');
+    if (!releaseInfo) return;
+    
+    const latestReleases = releases.slice(0, 3);
+    
+    releaseInfo.innerHTML = latestReleases.map((release, index) => {
+        const date = new Date(release.published_at).toLocaleDateString(
+            currentLang === 'ru' ? 'ru-RU' : 'en-US',
+            { year: 'numeric', month: 'short', day: 'numeric' }
+        );
+        
+        const isLatest = index === 0 && !release.prerelease;
+        const badge = isLatest ? '<span class="release-badge latest">Latest</span>' :
+                     release.prerelease ? '<span class="release-badge prerelease">Pre-release</span>' : '';
+        
+        let body = release.body || 'No description';
+        body = body.replace(/[#*`]/g, '').substring(0, 200);
+        
+        return `
+            <div class="release-item">
+                <div class="release-header">
+                    <span class="release-tag">${release.name || release.tag_name}</span>
+                    ${badge}
+                    <span class="release-date">${date}</span>
+                </div>
+                <div class="release-body">
+                    ${body}...
+                </div>
+                <button class="release-expand" onclick="window.open('${release.html_url}', '_blank')">
+                    View on GitHub →
+                </button>
+            </div>
+        `;
+    }).join('');
+}
 /* ============================================ */
 /* AUTH UI LOGIC                                */
 /* ============================================ */

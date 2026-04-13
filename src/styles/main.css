@@ -271,11 +271,26 @@ a:hover { color: var(--accent-blue-hover); }
 
 .user-info-section { display: flex; align-items: center; gap: 12px; padding: 12px; margin-bottom: 4px; }
 .user-avatar-large {
-    width: 48px; height: 48px; border-radius: 50%;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
     background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink));
-    display: flex; align-items: center; justify-content: center; font-size: 24px;
-    flex-shrink: 0; overflow: hidden; border: 2px solid var(--bg-primary); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    flex-shrink: 0;
+    overflow: hidden;
+    border: 2px solid var(--bg-primary);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
+.user-avatar-large img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
 .user-details { flex: 1; min-width: 0; }
 .user-name { font-size: 15px; font-weight: 600; color: var(--text-primary); margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .user-status { font-size: 12px; color: var(--text-tertiary); font-weight: 500; }
@@ -1147,7 +1162,7 @@ body.theme-sunset {
 .profile-avatar-large {
     width: 64px;
     height: 64px;
-    border-radius: 18px;
+    border-radius: 50%;  
     background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink));
     display: flex;
     align-items: center;
@@ -1161,6 +1176,7 @@ body.theme-sunset {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    border-radius: 50%;  /* Добавь эту строку */
 }
 
 .profile-info {
@@ -1583,4 +1599,416 @@ body.theme-sunset {
 
 .release-expand:hover {
     text-decoration: underline;
+}
+
+.discord-preview-inner {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.discord-preview-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+}
+
+.discord-preview-fallback {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #4caf50, #2196f3);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+}
+
+.discord-preview-icon:not([src]), 
+.discord-preview-icon[src=""] {
+    display: none;
+}
+
+.discord-preview-icon:not([src]) + .discord-preview-fallback,
+.discord-preview-icon[src=""] + .discord-preview-fallback {
+    display: flex;
+}
+
+.discord-preview-content {
+    flex: 1;
+}
+
+.discord-preview-title {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text-primary);
+}
+
+.discord-preview-details {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.discord-preview-state {
+    font-size: 12px;
+    color: var(--text-tertiary);
+}
+
+.discord-preview-time {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    margin-top: 4px;
+}
+
+.discord-hint {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    margin-top: 16px;
+    text-align: center;
+}
+
+/* Updates section icon */
+.version-icon-img {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+}
+
+.version-icon-fallback {
+    font-size: 40px;
+    line-height: 1;
+    display: none;
+}
+
+.version-icon-img:not([src]), 
+.version-icon-img[src=""] {
+    display: none;
+}
+
+.version-icon-img:not([src]) + .version-icon-fallback,
+.version-icon-img[src=""] + .version-icon-fallback {
+    display: flex;
+}
+
+/* About section icon */
+.about-icon-img {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+}
+
+.about-icon-fallback {
+    font-size: 56px;
+    display: none;
+}
+
+.about-icon-img:not([src]), 
+.about-icon-img[src=""] {
+    display: none;
+}
+
+.about-icon-img:not([src]) + .about-icon-fallback,
+.about-icon-img[src=""] + .about-icon-fallback {
+    display: block;
+}
+
+/* Avatar Modal */
+.avatar-preview-container {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.preview-label {
+    font-size: 13px;
+    color: var(--text-tertiary);
+    margin-top: 8px;
+}
+
+.avatar-upload-actions {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 24px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.avatar-modal-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 28px;
+}
+
+.avatar-modal-actions .btn-secondary,
+.avatar-modal-actions .btn-primary {
+    flex: 1;
+}
+
+/* Event buttons (для Edit Profile) */
+.event-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.event-btn {
+    flex: 1;
+    padding: 12px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s var(--ease-apple);
+    font-family: var(--font-main);
+}
+
+.event-btn-primary {
+    background: var(--accent-blue);
+    color: white;
+}
+
+.event-btn-primary:hover {
+    background: var(--accent-blue-hover);
+}
+
+.event-btn-secondary {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+}
+
+.event-btn-secondary:hover {
+    background: var(--border-light);
+}
+
+/* ============================================ */
+/* SNOWFALL BACKGROUND                          */
+/* ============================================ */
+
+.bg-snowfall {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: -2;
+    background: linear-gradient(180deg, #1a2a4a 0%, #0d1a2e 100%);
+    overflow: hidden;
+}
+
+.bg-snowfall .snowflake {
+    position: absolute;
+    color: white;
+    font-size: 1.5em;
+    opacity: 0.7;
+    animation: snowfallDrop linear infinite;
+    user-select: none;
+    pointer-events: none;
+}
+
+@keyframes snowfallDrop {
+    0% {
+        transform: translateY(-10vh) translateX(0) rotate(0deg);
+        opacity: 0;
+    }
+    10% {
+        opacity: 0.8;
+    }
+    90% {
+        opacity: 0.8;
+    }
+    100% {
+        transform: translateY(110vh) translateX(20px) rotate(360deg);
+        opacity: 0;
+    }
+}
+
+/* ============================================ */
+/* FIREFLIES BACKGROUND                         */
+/* ============================================ */
+
+.bg-fireflies {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: -2;
+    background: radial-gradient(circle at 50% 50%, #0d1f1a 0%, #05100c 100%);
+    overflow: hidden;
+}
+
+.bg-fireflies .firefly {
+    position: absolute;
+    width: 3px;
+    height: 3px;
+    background: #a8ff60;
+    border-radius: 50%;
+    box-shadow: 0 0 15px #7aff47, 0 0 30px #4caf50;
+    animation: fireflyFloat ease-in-out infinite;
+    opacity: 0;
+}
+
+@keyframes fireflyFloat {
+    0%, 100% {
+        transform: translate(0, 0);
+        opacity: 0;
+    }
+    10% {
+        opacity: 0.9;
+    }
+    20% {
+        transform: translate(15px, -25px);
+        opacity: 1;
+    }
+    40% {
+        transform: translate(-10px, -45px);
+        opacity: 0.7;
+    }
+    60% {
+        transform: translate(20px, -60px);
+        opacity: 1;
+    }
+    80% {
+        transform: translate(-5px, -35px);
+        opacity: 0.5;
+    }
+    90% {
+        opacity: 0;
+    }
+}
+
+body.with-bg-snowfall .bg-snowfall,
+body.with-bg-fireflies .bg-fireflies {
+    display: block;
+}
+
+body.with-bg-snowfall .app-main,
+body.with-bg-fireflies .app-main {
+    background: transparent;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+/* ============================================ */
+/* FROST THEME — морозное утро                  */
+/* ============================================ */
+
+body.theme-frost {
+    --bg-primary: #e8f0fe;
+    --bg-secondary: #dce6f5;
+    --bg-tertiary: #c5d5e8;
+    --bg-quaternary: #aec4dd;
+    --text-primary: #1a2b3c;
+    --text-secondary: #3a5a7a;
+    --text-tertiary: #6a8aa8;
+    --border-light: #b0c8e0;
+    --border-medium: #8aaccc;
+    --accent-blue: #4a90d9;
+    --accent-blue-hover: #357abd;
+    --accent-purple: #6b8cce;
+    --accent-pink: #c4a0d4;
+    --accent-green: #5bae7c;
+    --accent-red: #e0695e;
+    --shadow-sm: 0 2px 8px rgba(74, 144, 217, 0.08);
+    --shadow-md: 0 4px 16px rgba(74, 144, 217, 0.12);
+    --shadow-lg: 0 8px 32px rgba(74, 144, 217, 0.16);
+    --shadow-xl: 0 12px 48px rgba(74, 144, 217, 0.2);
+    --calendar-0: #dce6f5;
+    --calendar-1: #b0cce4;
+    --calendar-2: #7ab0d4;
+    --calendar-3: #4a94c4;
+    --calendar-4: #2a78b4;
+}
+
+/* ============================================ */
+/* CEDAR THEME — тёплое дерево                  */
+/* ============================================ */
+
+body.theme-cedar {
+    --bg-primary: #f5ebe0;
+    --bg-secondary: #ede0d4;
+    --bg-tertiary: #e3ccb2;
+    --bg-quaternary: #d4b896;
+    --text-primary: #2c1a0e;
+    --text-secondary: #5c3a22;
+    --text-tertiary: #8c6a4a;
+    --border-light: #c4a882;
+    --border-medium: #a88862;
+    --accent-blue: #8b5e3c;
+    --accent-blue-hover: #6b442a;
+    --accent-purple: #a67c52;
+    --accent-pink: #c4956a;
+    --accent-green: #7a9e6b;
+    --accent-red: #c46a5e;
+    --shadow-sm: 0 2px 8px rgba(139, 94, 60, 0.08);
+    --shadow-md: 0 4px 16px rgba(139, 94, 60, 0.12);
+    --shadow-lg: 0 8px 32px rgba(139, 94, 60, 0.16);
+    --shadow-xl: 0 12px 48px rgba(139, 94, 60, 0.2);
+    --calendar-0: #ede0d4;
+    --calendar-1: #dcc8ae;
+    --calendar-2: #c4a87c;
+    --calendar-3: #a8885a;
+    --calendar-4: #8b6a3c;
+}
+
+/* ============================================ */
+/* DUSK THEME — сумеречный, пурпурный           */
+/* ============================================ */
+
+body.theme-dusk {
+    --bg-primary: #1a1423;
+    --bg-secondary: #231b30;
+    --bg-tertiary: #2d2440;
+    --bg-quaternary: #3a2d50;
+    --text-primary: #f0e6ff;
+    --text-secondary: #c4aee0;
+    --text-tertiary: #9a7ec0;
+    --border-light: #4a3a60;
+    --border-medium: #6a5090;
+    --accent-blue: #9b6dff;
+    --accent-blue-hover: #b088ff;
+    --accent-purple: #c069e0;
+    --accent-pink: #e080b0;
+    --accent-green: #6bcf97;
+    --accent-red: #e06b6b;
+    --shadow-sm: 0 2px 8px rgba(155, 109, 255, 0.1);
+    --shadow-md: 0 4px 16px rgba(155, 109, 255, 0.15);
+    --shadow-lg: 0 8px 32px rgba(155, 109, 255, 0.2);
+    --shadow-xl: 0 12px 48px rgba(155, 109, 255, 0.25);
+    --calendar-0: #231b30;
+    --calendar-1: #3a2a50;
+    --calendar-2: #5a3a7a;
+    --calendar-3: #7a4aa0;
+    --calendar-4: #9b6dff;
+}
+
+/* ============================================ */
+/* MEADOW THEME — луговая свежесть              */
+/* ============================================ */
+
+body.theme-meadow {
+    --bg-primary: #f0f7e6;
+    --bg-secondary: #e2f0d4;
+    --bg-tertiary: #c8e0b8;
+    --bg-quaternary: #aed09a;
+    --text-primary: #1a2a0e;
+    --text-secondary: #3a5a22;
+    --text-tertiary: #6a8a4a;
+    --border-light: #b0c898;
+    --border-medium: #8aa872;
+    --accent-blue: #5aae4a;
+    --accent-blue-hover: #4a8e3a;
+    --accent-purple: #8eb87a;
+    --accent-pink: #d4b8a0;
+    --accent-green: #6bb85a;
+    --accent-red: #c4705e;
+    --shadow-sm: 0 2px 8px rgba(90, 174, 74, 0.08);
+    --shadow-md: 0 4px 16px rgba(90, 174, 74, 0.12);
+    --shadow-lg: 0 8px 32px rgba(90, 174, 74, 0.16);
+    --shadow-xl: 0 12px 48px rgba(90, 174, 74, 0.2);
+    --calendar-0: #e2f0d4;
+    --calendar-1: #c4e0a8;
+    --calendar-2: #a0cc7a;
+    --calendar-3: #7ab84a;
+    --calendar-4: #5aa42a;
 }

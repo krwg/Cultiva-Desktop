@@ -7,7 +7,7 @@ export const BRANDING = {
   CORE_ENGINE: 'CoreV2',         
   HABIT_ENGINE: 'GrowthKit2',      
   DATABASE: 'IDB2',               
-  VERSION: '0.3.2',
+  VERSION: '0.3.3',
   CODENAME: 'Sequoia',
   
   KEYS: {
