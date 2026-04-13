@@ -1,17 +1,13 @@
-
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('electron', {
-
   navigateTo: (page) => ipcRenderer.invoke('navigate-to', page),
   openCalendarWindow: () => ipcRenderer.send('open-calendar-window'),
-  
-
+  onUpdateMessage: (callback) => ipcRenderer.on('update-message', (_event, message) => callback(message)),
+  checkForUpdates: () => ipcRenderer.send('check-for-updates'),
+  restartApp: () => ipcRenderer.send('restart-app'),
   getAppPath: () => ipcRenderer.invoke('get-app-path'),
-  
-
   saveFile: (data, fileName) => ipcRenderer.invoke('save-file', data, fileName),
-  
   isElectron: true,
 });
 
@@ -19,7 +15,7 @@ let discordEnabled = true;
 
 contextBridge.exposeInMainWorld('discord', {
   updateActivity: (data) => {
-    if (!discordEnabled) {return;}
+    if (!discordEnabled) return;
     ipcRenderer.invoke('discord:update-activity', data);
   },
   getStatus: () => ipcRenderer.invoke('discord:status'),

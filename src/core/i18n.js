@@ -82,6 +82,10 @@ export const TRANSLATIONS = {
     discordDisconnected: 'Disconnected',
     discordDisabled: 'Disabled',
     discordChecking: 'Checking...',
+    currentVersion: 'Current Version',
+checkUpdates: 'Check for Updates',
+latestRelease: 'Latest Release',
+viewOnGitHub: 'View on GitHub',
   },
   ru: {
     backBtn: 'Назад', calendar: 'Календарь', whatsNew: 'Что нового',
@@ -166,5 +170,9 @@ export const TRANSLATIONS = {
     discordDisconnected: 'Отключено',
     discordDisabled: 'Выключено',
     discordChecking: 'Проверка...',
+    currentVersion: 'Текущая версия',
+checkUpdates: 'Проверить обновления',
+latestRelease: 'Последний релиз',
+viewOnGitHub: 'Смотреть на GitHub',
   }
 };

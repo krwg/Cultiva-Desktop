@@ -1,8 +1,8 @@
 {
   "name": "cultiva",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Grow your habits. Grow yourself.",
-  "main": "electron/main.js",
+  "main": "electron/main.cjs",
   "type": "module",
   "author": "krwg",
   "scripts": {
@@ -20,8 +20,14 @@
   "build": {
     "appId": "com.cultiva.app",
     "productName": "Cultiva",
+    "publish": {
+      "provider": "github",
+      "owner": "krwg",
+      "repo": "CultivaDesktop",
+      "releaseType": "release"
+    },
     "directories": {
-      "output": "release",  
+      "output": "release",
       "buildResources": "public"
     },
     "files": [
@@ -78,6 +84,7 @@
     "wait-on": "^7.2.0"
   },
   "dependencies": {
-    "discord-rpc": "^4.0.1"
+    "discord-rpc": "^4.0.1",
+    "electron-updater": "^6.8.3"
   }
 }

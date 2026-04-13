@@ -19,7 +19,7 @@ build/
 *.deb
 *.rpm
 *.tar.gz
-*.yml
+yml
 *.yaml
 builder-effective-config.yaml
 

@@ -84,6 +84,11 @@ function applyBranding() {
   document.querySelectorAll('.footer-version').forEach(el => {
     el.textContent = BRANDING.FOOTER_TEXT;
   });
+  
+  const aboutVersion = document.getElementById('about-version-display');
+  if (aboutVersion) {
+    aboutVersion.textContent = `Version [${BRANDING.VERSION}] ${BRANDING.CODENAME}`;
+  }
 }
 
 /* ============================================ */
@@ -456,6 +461,10 @@ function initSettingsNavigation() {
     closeModal(settingsModal);
     setTimeout(() => openModal(document.getElementById('avatar-modal')), 300);
   });
+
+      document.querySelector('[data-section="updates"]')?.addEventListener('click', () => {
+        updateUpdatesSection();
+    });
     
   document.getElementById('close-settings')?.addEventListener('click', () => {
     setTimeout(() => {
@@ -951,6 +960,199 @@ function importData(file) {
     .catch(err => alert(err.message));
 }
 
+
+// ============================================ //
+// UPDATES SECTION                              //
+// ============================================ //
+
+let updateStatus = {
+    state: 'checking', // checking, available, downloading, downloaded, error, uptodate
+    message: '',
+    progress: 0,
+    version: null
+};
+
+function updateUpdatesSection() {
+    const isElectron = typeof window.electron !== 'undefined';
+    
+    // Обновляем отображение текущей версии
+    const versionDisplay = document.getElementById('current-version-display');
+    const codenameDisplay = document.getElementById('current-codename-display');
+    
+    // Берем версию из BRANDING (если доступно) или из package.json через electron
+    if (versionDisplay) {
+        versionDisplay.textContent = BRANDING?.VERSION || '0.3.1';
+    }
+    if (codenameDisplay) {
+        codenameDisplay.textContent = BRANDING?.CODENAME || 'Sequoia';
+    }
+    
+    if (!isElectron) {
+        updateStatusCard('browser', 'Browser mode', 'Updates only available in desktop app');
+        document.getElementById('check-updates-btn')?.setAttribute('disabled', 'disabled');
+        return;
+    }
+    
+    // Подписываемся на сообщения об обновлениях
+    if (window.electron.onUpdateMessage) {
+        window.electron.onUpdateMessage((message) => {
+            console.log('[Updater]', message);
+            
+            // Парсим сообщения от updater
+            if (message.includes('Checking for updates')) {
+                updateStatusCard('checking', 'Checking...', message);
+            } else if (message.includes('Update') && message.includes('found')) {
+                const versionMatch = message.match(/(\d+\.\d+\.\d+)/);
+                updateStatus.version = versionMatch ? versionMatch[1] : null;
+                updateStatusCard('available', 'Update available', message);
+            } else if (message.includes('Downloading')) {
+                updateStatusCard('downloading', 'Downloading update', message);
+            } else if (message.includes('Download progress')) {
+                // Парсим прогресс
+                const percentMatch = message.match(/Downloaded (\d+)%/);
+                if (percentMatch) {
+                    updateStatus.progress = parseInt(percentMatch[1]);
+                    updateDownloadProgress(updateStatus.progress, message);
+                }
+            } else if (message.includes('downloaded')) {
+                updateStatusCard('downloaded', 'Update ready', message);
+                document.getElementById('check-updates-btn').innerHTML = `
+                    <span class="btn-icon">🔄</span>
+                    <span>Restart to Update</span>
+                `;
+            } else if (message.includes('latest version')) {
+                updateStatusCard('uptodate', 'Up to date', message);
+            } else if (message.includes('error')) {
+                updateStatusCard('error', 'Update error', message);
+            } else {
+                updateStatusCard('info', 'Update status', message);
+            }
+        });
+    }
+    
+    // Загружаем информацию о релизах с GitHub
+    fetchReleaseInfo();
+    
+    // Обработчик кнопки проверки обновлений
+    document.getElementById('check-updates-btn')?.addEventListener('click', () => {
+        if (updateStatus.state === 'downloaded') {
+            // Если обновление уже скачано, перезапускаем
+            window.electron.restartApp?.();
+        } else {
+            // Иначе проверяем обновления
+            window.electron.checkForUpdates?.();
+            updateStatusCard('checking', 'Checking for updates...', 'Contacting GitHub...');
+        }
+    });
+    
+    // Ссылка на GitHub releases
+    document.getElementById('view-releases-link')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        window.open('https://github.com/krwg/CultivaDesktop/releases', '_blank');
+    });
+}
+
+function updateStatusCard(state, title, message) {
+    updateStatus.state = state;
+    
+    const card = document.getElementById('update-status-card');
+    const icon = document.getElementById('update-status-icon');
+    const titleEl = document.getElementById('update-status-title');
+    const messageEl = document.getElementById('update-status-message');
+    
+    if (card) {
+        card.className = 'update-status-card ' + state;
+    }
+    
+    if (icon) {
+        const icons = {
+            checking: '🔍',
+            available: '⬇️',
+            downloading: '⬇️',
+            downloaded: '✅',
+            uptodate: '✓',
+            error: '❌',
+            browser: '🌐'
+        };
+        icon.textContent = icons[state] || 'ℹ️';
+    }
+    
+    if (titleEl) titleEl.textContent = title;
+    if (messageEl) messageEl.textContent = message;
+    
+    // Показываем/скрываем прогресс-бар
+    const progressEl = document.getElementById('update-progress');
+    if (progressEl) {
+        progressEl.style.display = state === 'downloading' ? 'block' : 'none';
+    }
+}
+
+function updateDownloadProgress(percent, message) {
+    const progressBar = document.getElementById('update-progress-bar');
+    const progressText = document.getElementById('update-progress-text');
+    
+    if (progressBar) {
+        progressBar.style.width = percent + '%';
+    }
+    if (progressText) {
+        progressText.textContent = `Downloading... ${percent}%`;
+    }
+}
+
+async function fetchReleaseInfo() {
+    const releaseInfo = document.getElementById('release-info');
+    if (!releaseInfo) return;
+    
+    try {
+        const response = await fetch('https://api.github.com/repos/krwg/CultivaDesktop/releases');
+        const releases = await response.json();
+        
+        if (!Array.isArray(releases) || releases.length === 0) {
+            releaseInfo.innerHTML = '<div class="release-loading">No releases found</div>';
+            return;
+        }
+        
+        // Показываем последние 3 релиза
+        const latestReleases = releases.slice(0, 3);
+        
+        releaseInfo.innerHTML = latestReleases.map((release, index) => {
+            const date = new Date(release.published_at).toLocaleDateString(
+                currentLang === 'ru' ? 'ru-RU' : 'en-US',
+                { year: 'numeric', month: 'short', day: 'numeric' }
+            );
+            
+            const isLatest = index === 0 && !release.prerelease;
+            const badge = isLatest ? '<span class="release-badge latest">Latest</span>' :
+                         release.prerelease ? '<span class="release-badge prerelease">Pre-release</span>' : '';
+            
+            // Очищаем markdown (простая замена)
+            let body = release.body || 'No description';
+            body = body.replace(/[#*`]/g, '').substring(0, 200);
+            
+            return `
+                <div class="release-item">
+                    <div class="release-header">
+                        <span class="release-tag">${release.name || release.tag_name}</span>
+                        ${badge}
+                        <span class="release-date">${date}</span>
+                    </div>
+                    <div class="release-body" id="release-${release.id}">
+                        ${body}...
+                    </div>
+                    <button class="release-expand" onclick="window.open('${release.html_url}', '_blank')">
+                        View on GitHub →
+                    </button>
+                </div>
+            `;
+        }).join('');
+        
+    } catch (error) {
+        console.error('Failed to fetch releases:', error);
+        releaseInfo.innerHTML = '<div class="release-loading">Failed to load releases</div>';
+    }
+}
+
+
 /* ============================================ */
 /* AUTH UI LOGIC                                */
 /* ============================================ */
@@ -1360,6 +1562,14 @@ const hideLoading = () => {
     setTimeout(() => { loadingScreen.style.display = 'none'; loadingScreen.style.visibility = 'hidden'; }, 600);
   }
 };
+
+if (typeof window.electron !== 'undefined' && window.electron.onUpdateMessage) {
+  window.electron.onUpdateMessage((message) => {
+    console.log('[Updater]', message);
+    showNotification('', message);
+  });
+}
+
 
 async function init() {
   try {

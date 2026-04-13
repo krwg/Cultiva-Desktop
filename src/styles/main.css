@@ -1306,3 +1306,281 @@ body.theme-sunset {
     background: var(--accent-red);
     color: white;
 }
+
+/* ============================================ */
+/* UPDATES SECTION                              */
+/* ============================================ */
+
+.updates-container {
+    padding: 8px 0;
+}
+
+.version-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-quaternary) 100%);
+    border-radius: 16px;
+    margin-bottom: 8px;
+}
+
+.version-icon {
+    font-size: 40px;
+    line-height: 1;
+}
+
+.version-info {
+    flex: 1;
+}
+
+.version-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin-bottom: 4px;
+}
+
+.version-number {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: -0.02em;
+}
+
+.version-codename {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+}
+
+.update-status-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px;
+    background: var(--bg-secondary);
+    border-radius: 14px;
+    margin: 16px 0;
+    border: 1px solid var(--border-light);
+}
+
+.status-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: var(--bg-tertiary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+}
+
+.update-status-card.updating .status-icon {
+    background: var(--accent-blue);
+    color: white;
+}
+
+.update-status-card.available .status-icon {
+    background: var(--accent-orange);
+    color: white;
+}
+
+.update-status-card.downloaded .status-icon {
+    background: var(--accent-green);
+    color: white;
+}
+
+.update-status-card.error .status-icon {
+    background: var(--accent-red);
+    color: white;
+}
+
+.status-info {
+    flex: 1;
+}
+
+.status-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.status-message {
+    font-size: 13px;
+    color: var(--text-tertiary);
+}
+
+.update-progress {
+    margin: 16px 0;
+}
+
+.progress-bar-container {
+    height: 6px;
+    background: var(--bg-tertiary);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background: var(--accent-blue);
+    border-radius: 3px;
+    width: 0%;
+    transition: width 0.3s var(--ease-apple);
+}
+
+.progress-text {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    text-align: right;
+    font-feature-settings: "tnum";
+}
+
+.updates-actions {
+    display: flex;
+    gap: 12px;
+    margin: 16px 0;
+}
+
+.updates-actions .btn-secondary {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-icon {
+    font-size: 16px;
+}
+
+.release-notes-section {
+    margin-top: 20px;
+}
+
+.release-notes-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.release-notes-header span:first-child {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.release-link {
+    font-size: 12px;
+    color: var(--accent-blue);
+    text-decoration: none;
+}
+
+.release-link:hover {
+    text-decoration: underline;
+}
+
+.release-info {
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    padding: 16px;
+    border: 1px solid var(--border-light);
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.release-loading {
+    text-align: center;
+    color: var(--text-tertiary);
+    font-size: 13px;
+}
+
+.release-item {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.release-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.release-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+
+.release-tag {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.release-badge {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 12px;
+    text-transform: uppercase;
+}
+
+.release-badge.latest {
+    background: var(--accent-green);
+    color: white;
+}
+
+.release-badge.prerelease {
+    background: var(--accent-orange);
+    color: white;
+}
+
+.release-date {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    margin-left: auto;
+}
+
+.release-body {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    max-height: 80px;
+    overflow: hidden;
+    position: relative;
+}
+
+.release-body.expanded {
+    max-height: none;
+}
+
+.release-body-fade {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 30px;
+    background: linear-gradient(to bottom, transparent, var(--bg-secondary));
+    pointer-events: none;
+}
+
+.release-expand {
+    margin-top: 6px;
+    font-size: 12px;
+    color: var(--accent-blue);
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 0;
+}
+
+.release-expand:hover {
+    text-decoration: underline;
+}

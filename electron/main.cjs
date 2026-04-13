@@ -4,6 +4,7 @@ const fs = require('fs');
 const pkg = require('../package.json');
 const isDev = process.env.NODE_ENV === 'development';
 const { Client } = require('discord-rpc');
+const { autoUpdater } = require('electron-updater');
 
 const DISCORD_CLIENT_ID = '1492849856832606329';
 let rpc = null;
@@ -39,7 +40,7 @@ const DISCORD_STRINGS = {
 };
 
 function initDiscordRPC() {
-  if (rpc) {return;}
+  if (rpc) { return; }
   
   rpc = new Client({ transport: 'ipc' });
   
@@ -69,7 +70,7 @@ function initDiscordRPC() {
 }
 
 function updateDiscordActivity(activityData = {}) {
-  if (!rpcReady || !rpc || !discordEnabled) {return;}
+  if (!rpcReady || !rpc || !discordEnabled) { return; }
   
   const locale = activityData.locale || currentLocale;
   const strings = DISCORD_STRINGS[locale] || DISCORD_STRINGS.en;
@@ -94,7 +95,7 @@ function updateDiscordActivity(activityData = {}) {
 }
 
 function clearDiscordActivity() {
-  if (!rpcReady || !rpc) {return;}
+  if (!rpcReady || !rpc) { return; }
   
   rpc.clearActivity().catch(err => {
     console.warn('[Discord] Failed to clear activity:', err.message);
@@ -115,13 +116,84 @@ function shutdownDiscordRPC() {
 }
 
 function detectPageFromUrl(url) {
-  if (url.includes('/calendar')) {return 'calendar';}
-  if (url.includes('/pages/')) {return 'pages';}
-  if (url.includes('settings') || url.includes('settings-modal')) {return 'settings';}
-  if (url.includes('stats')) {return 'stats';}
-  if (url.includes('trophy')) {return 'trophy';}
-  if (url.includes('focus')) {return 'focus';}
+  if (url.includes('/calendar')) return 'calendar';
+  if (url.includes('/pages/')) return 'pages';
+  if (url.includes('settings') || url.includes('settings-modal')) return 'settings';
+  if (url.includes('stats')) return 'stats';
+  if (url.includes('trophy')) return 'trophy';
+  if (url.includes('focus')) return 'focus';
   return 'garden';
+}
+
+/* ============================================ */
+/* AUTO UPDATER                                 */
+/* ============================================ */
+
+function setupAutoUpdater() {
+  // Безопасная настройка логгера
+  autoUpdater.logger = console;
+  
+  // Проверяем, есть ли transports.file перед установкой уровня
+  if (autoUpdater.logger && autoUpdater.logger.transports && autoUpdater.logger.transports.file) {
+    autoUpdater.logger.transports.file.level = 'info';
+  }
+
+  autoUpdater.on('checking-for-update', () => {
+    console.log('[Updater] Checking for updates...');
+    if (mainWindow && mainWindow.webContents) {
+      mainWindow.webContents.send('update-message', 'Checking for updates...');
+    }
+  });
+
+  autoUpdater.on('update-available', (info) => {
+    console.log('[Updater] Update available:', info.version);
+    if (mainWindow && mainWindow.webContents) {
+      mainWindow.webContents.send('update-message', `Update ${info.version} found. Downloading...`);
+    }
+  });
+
+  autoUpdater.on('update-not-available', () => {
+    console.log('[Updater] No update available');
+    if (mainWindow && mainWindow.webContents) {
+      mainWindow.webContents.send('update-message', 'You are using the latest version.');
+    }
+  });
+
+  autoUpdater.on('error', (err) => {
+    console.error('[Updater] Error:', err.message);
+    if (mainWindow && mainWindow.webContents) {
+      mainWindow.webContents.send('update-message', `Update error: ${err.message}`);
+    }
+  });
+
+  autoUpdater.on('download-progress', (progressObj) => {
+    console.log('[Updater] Download progress:', progressObj.percent, '%');
+    if (mainWindow && mainWindow.webContents) {
+      const logMessage = `Downloaded ${progressObj.percent}%`;
+      mainWindow.webContents.send('update-message', logMessage);
+    }
+  });
+
+  autoUpdater.on('update-downloaded', (info) => {
+    console.log('[Updater] Update downloaded:', info.version);
+    if (mainWindow && mainWindow.webContents) {
+      mainWindow.webContents.send('update-message', 'Update downloaded. It will be installed on restart.');
+    }
+
+    dialog.showMessageBox(mainWindow, {
+      type: 'info',
+      title: 'Update Ready',
+      message: `Version ${info.version} is downloaded. Restart now to install?`,
+      buttons: ['Restart', 'Later']
+    }).then(({ response }) => {
+      if (response === 0) {
+        autoUpdater.quitAndInstall();
+      }
+    });
+  });
+
+  // Проверяем обновления
+  autoUpdater.checkForUpdatesAndNotify();
 }
 
 /* ============================================ */
@@ -222,6 +294,9 @@ function createWindow() {
     if (discordEnabled) {
       updateDiscordActivity({ page: 'garden' });
     }
+    
+    // +++ ВАЖНО: Запускаем проверку обновлений только после готовности окна
+    setupAutoUpdater();
   });
 
   mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDesc, validatedURL) => {
@@ -272,6 +347,15 @@ function createWindow() {
 /* IPC HANDLERS                                 */
 /* ============================================ */
 
+ipcMain.on('check-for-updates', () => {
+  console.log('[Updater] Manual check triggered');
+  autoUpdater.checkForUpdatesAndNotify();
+});
+
+ipcMain.on('restart-app', () => {
+  autoUpdater.quitAndInstall();
+});
+
 ipcMain.handle('save-file', async (event, data, fileName) => {
   const { filePath } = await dialog.showSaveDialog(mainWindow, {
     title: 'Save backup',
@@ -288,7 +372,7 @@ ipcMain.handle('save-file', async (event, data, fileName) => {
 });
 
 ipcMain.handle('navigate-to', (event, page) => {
-  if (!mainWindow) {return { success: false };}
+  if (!mainWindow) { return { success: false }; }
   
   const pagePath = path.join(__dirname, '../dist', page);
   console.log('[Electron] Navigating to:', pagePath);
@@ -387,13 +471,17 @@ app.whenReady().then(() => {
   createWindow();
 
   app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) {createWindow();}
+    if (BrowserWindow.getAllWindows().length === 0) {
+      createWindow();
+    }
   });
 });
 
 app.on('window-all-closed', () => {
   shutdownDiscordRPC();
-  if (process.platform !== 'darwin') {app.quit();}
+  if (process.platform !== 'darwin') {
+    app.quit();
+  }
 });
 
 app.on('before-quit', () => {
