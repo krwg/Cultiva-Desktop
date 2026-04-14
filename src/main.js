@@ -5,6 +5,7 @@ import { GROWTH_STAGES, LEGACY_THRESHOLD, MAX_ACTIVE_HABITS } from './core/confi
 import { storage } from './modules/storage.js';
 import { BRANDING } from './core/branding.js';
 import { habits } from './modules/habits.js';
+import { pluginManager } from './core/plugin-manager.js';
 
 let currentLang = 'en';
 let currentT = TRANSLATIONS.en;
@@ -100,7 +101,8 @@ const settings = {
   showTrophies: false, 
   focusMode: false,
   holidayRegion: 'us',
-  avatar: { background: 'green', emoji: '🌱' }
+  avatar: { background: 'green', emoji: '🌱' },
+  pluginsEnabled: true
 };
 
 /* ============================================ */
@@ -175,6 +177,7 @@ async function loadSettings() {
       if (typeof saved.focusMode === 'boolean') { settings.focusMode = saved.focusMode; }
       if (saved.holidayRegion) { settings.holidayRegion = saved.holidayRegion; }
       if (saved.avatar) { settings.avatar = { ...settings.avatar, ...saved.avatar }; }
+      if (typeof saved.pluginsEnabled === 'boolean') { settings.pluginsEnabled = saved.pluginsEnabled; }
     }
         
     currentLang = settings.lang;
@@ -240,6 +243,9 @@ function applySettings() {
     holidaySelect.removeEventListener('change', handleHolidayChange);
     holidaySelect.addEventListener('change', handleHolidayChange);
   }
+  
+  const pluginsToggle = document.getElementById('toggle-plugins');
+  if (pluginsToggle) { pluginsToggle.checked = settings.pluginsEnabled; }
     
   renderHeaderAvatar();
 }
@@ -493,6 +499,7 @@ function initSettingsNavigation() {
       if (targetSection) { targetSection.classList.add('active'); }
             
       if (section === 'profile') { updateProfileSection(); }
+      if (section === 'plugins') { renderPluginsSection(); }
     });
   });
     
@@ -523,6 +530,167 @@ function initSettingsNavigation() {
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && settingsModal?.classList.contains('active')) {
       document.getElementById('close-settings')?.click();
+    }
+  });
+}
+
+/* ============================================ */
+/* PLUGINS UI                                   */
+/* ============================================ */
+
+async function renderPluginsSection() {
+  const pluginsToggle = document.getElementById('toggle-plugins');
+  if (pluginsToggle) {
+    pluginsToggle.checked = settings.pluginsEnabled;
+    pluginsToggle.addEventListener('change', (e) => {
+      settings.pluginsEnabled = e.target.checked;
+      saveSettings();
+      
+      if (settings.pluginsEnabled) {
+        pluginManager.init();
+        renderPluginHeaderItems();
+      } else {
+        document.querySelectorAll('.header-plugin-item').forEach(el => el.remove());
+      }
+    });
+  }
+  
+  await loadInstalledPlugins();
+  await loadAvailablePlugins();
+}
+
+async function loadInstalledPlugins() {
+  const container = document.getElementById('installed-plugins-list');
+  if (!container) return;
+  
+  const plugins = pluginManager.getInstalledPlugins();
+  const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+  
+  if (plugins.length === 0) {
+    container.innerHTML = `<div class="plugins-empty" data-i18n="noPluginsInstalled">${t.noPluginsInstalled}</div>`;
+    return;
+  }
+  
+  container.innerHTML = plugins.map(p => `
+    <div class="plugin-card">
+      <div class="plugin-icon">${p.icon || '🔌'}</div>
+      <div class="plugin-info">
+        <div class="plugin-name">${p.name}</div>
+        <div class="plugin-description">${p.description || ''}</div>
+        <div class="plugin-meta">
+          <span class="plugin-version">v${p.version}</span>
+        </div>
+      </div>
+      <div class="plugin-actions">
+        <button class="plugin-btn plugin-btn-settings" onclick="window.openPluginSettings('${p.id}')" title="${t.pluginSettings}">⚙️</button>
+        <button class="plugin-btn plugin-btn-uninstall" onclick="window.uninstallPlugin('${p.id}')" title="${t.uninstall}">🗑️</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function loadAvailablePlugins() {
+  const container = document.getElementById('available-plugins-list');
+  if (!container) return;
+  
+  const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+  container.innerHTML = `<div class="plugins-loading" data-i18n="checkingPlugins">${t.checkingPlugins}</div>`;
+  
+  try {
+    const plugins = await pluginManager.getAvailablePlugins();
+    
+    const available = plugins.filter(p => !p.installed);
+    
+    if (available.length === 0) {
+      container.innerHTML = `<div class="plugins-empty" data-i18n="noPluginsAvailable">${t.noPluginsAvailable}</div>`;
+      return;
+    }
+    
+    container.innerHTML = available.map(p => `
+      <div class="plugin-card">
+        <div class="plugin-icon">${p.icon || '🔌'}</div>
+        <div class="plugin-info">
+          <div class="plugin-name">${p.name}</div>
+          <div class="plugin-description">${p.description || ''}</div>
+          <div class="plugin-meta">
+            <span class="plugin-version">v${p.version}</span>
+            <span class="plugin-author">${p.author}</span>
+          </div>
+        </div>
+        <div class="plugin-actions">
+          <button class="plugin-btn plugin-btn-install" onclick="window.installPlugin('${p.id}')">
+            ${t.install}
+          </button>
+        </div>
+      </div>
+    `).join('');
+  } catch (e) {
+    container.innerHTML = `<div class="plugins-empty">${t.pluginInstallFailed}</div>`;
+  }
+}
+
+window.installPlugin = async (pluginId) => {
+  try {
+    showNotification('', 'Installing plugin...');
+    await pluginManager.installPlugin(pluginId);
+    showNotification('', 'Plugin installed successfully!');
+    await renderPluginsSection();
+    renderPluginHeaderItems();
+  } catch (e) {
+    showNotification('', 'Failed to install plugin: ' + e.message);
+  }
+};
+
+window.uninstallPlugin = async (pluginId) => {
+  const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+  if (confirm(t.pluginUninstallConfirm)) {
+    await pluginManager.uninstallPlugin(pluginId);
+    showNotification('', t.pluginUninstallSuccess);
+    await renderPluginsSection();
+    renderPluginHeaderItems();
+  }
+};
+
+window.openPluginSettings = (pluginId) => {
+  console.log('[Plugins] Open settings for:', pluginId);
+  showNotification('', 'Plugin settings coming soon');
+};
+
+function renderPluginHeaderItems() {
+  if (!settings.pluginsEnabled) return;
+  
+  const headerActions = document.querySelector('.header-actions');
+  if (!headerActions) return;
+  
+  document.querySelectorAll('.header-plugin-item').forEach(el => el.remove());
+  
+  const installedPlugins = pluginManager.getInstalledPlugins();
+  
+  installedPlugins.forEach(plugin => {
+    const pluginData = pluginManager.plugins.get(plugin.id);
+    
+    if (pluginData?.headerItem) {
+      const item = document.createElement('div');
+      item.className = 'header-plugin-item';
+      item.innerHTML = `
+        <span class="header-plugin-icon">${pluginData.headerItem.icon}</span>
+        <span>${pluginData.headerItem.label}</span>
+      `;
+      
+      // +++ ИСПРАВЛЯЕМ КЛИК +++
+      item.onclick = () => {
+        const instance = pluginData.instance;
+        if (instance && typeof instance.openWeatherModal === 'function') {
+          instance.openWeatherModal();
+        } else if (pluginData.headerItem.onClick) {
+          pluginData.headerItem.onClick();
+        } else {
+          console.warn('[Plugin] No click handler found for', plugin.id);
+        }
+      };
+      
+      const addBtn = document.getElementById('open-add-modal');
+      headerActions.insertBefore(item, addBtn);
     }
   });
 }
@@ -976,7 +1144,7 @@ function openStats(id) {
 
 function exportData() {
   const t = TRANSLATIONS[settings.lang];
-  const data = { habits: habits.getAll(), exportedAt: new Date().toISOString(), version: '0.3.0' };
+  const data = { habits: habits.getAll(), exportedAt: new Date().toISOString(), version: '0.3.5' };
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -1019,7 +1187,7 @@ function updateUpdatesSection() {
   const codenameDisplay = document.getElementById('current-codename-display');
     
   if (versionDisplay) {
-    versionDisplay.textContent = BRANDING?.VERSION || '0.3.1';
+    versionDisplay.textContent = BRANDING?.VERSION || '0.3.5';
   }
   if (codenameDisplay) {
     codenameDisplay.textContent = BRANDING?.CODENAME || 'Sequoia';
@@ -1607,6 +1775,11 @@ function getPageState(page, locale) {
   return strings[locale]?.[page] || strings.en[page] || 'Growing habits';
 }
 
+
+window.renderPluginHeaderItems = renderPluginHeaderItems;
+window.pluginManager = pluginManager;
+window.showNotification = showNotification;
+
 /* ============================================ */
 /* INITIALIZATION                               */
 /* ============================================ */
@@ -1639,6 +1812,12 @@ async function init() {
     applyBranding();
     await loadSettings();
     applySettings();
+    
+    // Инициализация плагинов
+    if (settings.pluginsEnabled) {
+      await pluginManager.init();
+    }
+    
     renderGarden();
     initEvents();
     initAvatarPicker();
@@ -1648,7 +1827,11 @@ async function init() {
     await updateAuthUI();
     updateCultivaDatePreview();
     updateProfileSection();
-    console.log('Cultiva [0.3.3] initialized');
+    
+    // Рендерим элементы плагинов в шапке
+    renderPluginHeaderItems();
+    
+    console.log('Cultiva [0.3.5] initialized');
   } catch (err) {
     console.error('Init failed:', err);
   }

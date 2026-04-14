@@ -2012,3 +2012,162 @@ body.theme-meadow {
     --calendar-3: #7ab84a;
     --calendar-4: #5aa42a;
 }
+
+/* ============================================ */
+/* PLUGINS SECTION                              */
+/* ============================================ */
+
+.plugins-container {
+    padding: 8px 0;
+}
+
+.plugins-section h3 {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 16px;
+}
+
+.plugins-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.plugin-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px;
+    background: var(--bg-secondary);
+    border-radius: 14px;
+    border: 1px solid var(--border-light);
+}
+
+.plugin-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: var(--bg-tertiary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+}
+
+.plugin-info {
+    flex: 1;
+}
+
+.plugin-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 2px;
+}
+
+.plugin-description {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    margin-bottom: 4px;
+}
+
+.plugin-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: var(--text-tertiary);
+}
+
+.plugin-version {
+    font-family: var(--font-mono);
+}
+
+.plugin-author {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.plugin-actions {
+    display: flex;
+    gap: 6px;
+}
+
+.plugin-btn {
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s var(--ease-apple);
+}
+
+.plugin-btn-install {
+    background: var(--accent-blue);
+    color: white;
+}
+
+.plugin-btn-install:hover {
+    background: var(--accent-blue-hover);
+}
+
+.plugin-btn-installed {
+    background: var(--bg-tertiary);
+    color: var(--text-tertiary);
+    cursor: default;
+}
+
+.plugin-btn-uninstall {
+    background: transparent;
+    color: var(--accent-red);
+    border: 1px solid var(--border-light);
+}
+
+.plugin-btn-uninstall:hover {
+    background: var(--accent-red);
+    color: white;
+    border-color: var(--accent-red);
+}
+
+.plugin-btn-settings {
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-light);
+}
+
+.plugin-btn-settings:hover {
+    background: var(--bg-tertiary);
+}
+
+.plugins-empty, .plugins-loading {
+    text-align: center;
+    padding: 24px;
+    color: var(--text-tertiary);
+    font-size: 13px;
+}
+
+
+.header-plugin-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all var(--duration-fast) var(--ease-apple);
+}
+
+.header-plugin-item:hover {
+    color: var(--text-primary);
+    background: var(--bg-tertiary);
+}
+
+.header-plugin-icon {
+    font-size: 16px;
+}

@@ -5,6 +5,7 @@ const pkg = require('../package.json');
 const isDev = process.env.NODE_ENV === 'development';
 const { Client } = require('discord-rpc');
 const { autoUpdater } = require('electron-updater');
+const { setupPluginIPC } = require('./plugin-ipc.cjs');
 
 const DISCORD_CLIENT_ID = '1492849856832606329';
 let rpc = null;
@@ -116,12 +117,12 @@ function shutdownDiscordRPC() {
 }
 
 function detectPageFromUrl(url) {
-  if (url.includes('/calendar')) {return 'calendar';}
-  if (url.includes('/pages/')) {return 'pages';}
-  if (url.includes('settings') || url.includes('settings-modal')) {return 'settings';}
-  if (url.includes('stats')) {return 'stats';}
-  if (url.includes('trophy')) {return 'trophy';}
-  if (url.includes('focus')) {return 'focus';}
+  if (url.includes('/calendar')) { return 'calendar'; }
+  if (url.includes('/pages/')) { return 'pages'; }
+  if (url.includes('settings') || url.includes('settings-modal')) { return 'settings'; }
+  if (url.includes('stats')) { return 'stats'; }
+  if (url.includes('trophy')) { return 'trophy'; }
+  if (url.includes('focus')) { return 'focus'; }
   return 'garden';
 }
 
@@ -130,10 +131,8 @@ function detectPageFromUrl(url) {
 /* ============================================ */
 
 function setupAutoUpdater() {
-  // Безопасная настройка логгера
   autoUpdater.logger = console;
   
-  // Проверяем, есть ли transports.file перед установкой уровня
   if (autoUpdater.logger && autoUpdater.logger.transports && autoUpdater.logger.transports.file) {
     autoUpdater.logger.transports.file.level = 'info';
   }
@@ -192,7 +191,6 @@ function setupAutoUpdater() {
     });
   });
 
-  // Проверяем обновления
   autoUpdater.checkForUpdatesAndNotify();
 }
 
@@ -261,6 +259,21 @@ function createWindow() {
     }
   });
 
+mainWindow.webContents.session.webRequest.onHeadersReceived((details, callback) => {
+  callback({
+    responseHeaders: {
+      ...details.responseHeaders,
+      'Content-Security-Policy': [
+        "default-src 'self' 'unsafe-inline' 'unsafe-eval' file: data:; " +
+        "img-src 'self' data: blob: file: https:; " +
+        "style-src 'self' 'unsafe-inline'; " +
+        "connect-src 'self' https://raw.githubusercontent.com https://api.github.com https://github.com https://api.open-meteo.com; " +  
+        "font-src 'self' data:;"
+      ]
+    }
+  });
+});
+
   mainWindow.webContents.on('did-navigate', (event, url) => {
     console.log('[Electron] Navigated to:', url);
     currentPage = detectPageFromUrl(url);
@@ -281,7 +294,6 @@ function createWindow() {
 
   if (isDev && process.env.VITE_DEV_SERVER_URL) {
     mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL);
-    mainWindow.webContents.openDevTools({ mode: 'detach' });
   } else {
     const indexPath = path.join(__dirname, '../dist/index.html');
     console.log('[Electron] Loading:', indexPath);
@@ -295,7 +307,6 @@ function createWindow() {
       updateDiscordActivity({ page: 'garden' });
     }
     
-    // +++ ВАЖНО: Запускаем проверку обновлений только после готовности окна
     setupAutoUpdater();
   });
 
@@ -320,19 +331,6 @@ function createWindow() {
 
   mainWindow.webContents.on('render-process-gone', (event, details) => {
     console.error('[Electron] Render process gone:', details);
-  });
-
-  mainWindow.webContents.session.webRequest.onHeadersReceived((details, callback) => {
-    callback({
-      responseHeaders: {
-        ...details.responseHeaders,
-        'Content-Security-Policy': [
-          "default-src 'self' 'unsafe-inline' 'unsafe-eval' file: data:; " +
-          "img-src 'self' data: blob: file:; " +
-          "style-src 'self' 'unsafe-inline';"
-        ]
-      }
-    });
   });
 
   mainWindow.on('closed', () => {
@@ -468,6 +466,7 @@ ipcMain.handle('discord:set-locale', (event, locale) => {
 
 app.whenReady().then(() => {
   initDiscordRPC();
+  setupPluginIPC();
   createWindow();
 
   app.on('activate', () => {
