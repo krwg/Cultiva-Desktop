@@ -7,6 +7,53 @@ import { BRANDING } from './core/branding.js';
 import { habits } from './modules/habits.js';
 import { pluginManager } from './core/plugin-manager.js';
 
+
+/* ============================================ */
+/* PRE-INIT STATE RECOVERY                      */
+/* ============================================ */
+
+
+const _preInitSettings = localStorage.getItem('cultiva-settings');
+if (_preInitSettings) {
+  try {
+    const parsed = JSON.parse(_preInitSettings);
+    if (parsed && typeof parsed === 'object') {
+      Object.assign(settings, parsed); // Обновляем глобальный settings
+    }
+  } catch (e) { console.warn('[Pre-init] Invalid settings JSON'); }
+}
+
+
+(function applyInitialTheme() {
+  const t = settings.theme || 'auto';
+  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const resolved = t === 'auto' ? (isDark ? 'dark' : 'light') : t;
+  
+
+  document.body.className = `theme-${resolved}`; 
+})();
+
+
+
+/* ============================================ */
+/* INIT GATE                                    */
+/* ============================================ */
+let _appReady = null;
+
+async function ensureAppReady() {
+  if (_appReady) return _appReady;
+  
+  _appReady = (async () => {
+    await storage.init();
+    await auth.init();
+    if (settings.pluginsEnabled) {
+      await pluginManager.init();
+    }
+  })();
+  
+  return _appReady;
+}
+
 let currentLang = 'en';
 let currentT = TRANSLATIONS.en;
 
@@ -161,15 +208,20 @@ let tempAvatar = { ...settings.avatar };
 
 async function loadSettings() {
   try {
+
+    await ensureAppReady();
+    
     let saved = await storage.get('cultiva-settings');
-        
+    
     if (!saved) {
+
       const ls = localStorage.getItem('cultiva-settings');
-      if (ls) { saved = JSON.parse(ls); }
+      if (ls) { 
+        saved = JSON.parse(ls);
+        await storage.set('cultiva-settings', saved);
+      }
     }
-        
-    console.log('Loaded settings:', saved);
-        
+    
     if (saved && typeof saved === 'object') {
       if (saved.lang) { settings.lang = saved.lang; }
       if (saved.theme) { settings.theme = saved.theme; }  
@@ -179,28 +231,26 @@ async function loadSettings() {
       if (saved.avatar) { settings.avatar = { ...settings.avatar, ...saved.avatar }; }
       if (typeof saved.pluginsEnabled === 'boolean') { settings.pluginsEnabled = saved.pluginsEnabled; }
     }
-        
+    
     currentLang = settings.lang;
     currentT = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    return settings;
   } catch (err) {
     console.warn('Failed to load settings:', err);
+    return settings;
   }
 }
 
+
+
+ 
 function saveSettings() {
-  console.log('Saving settings (before):', settings);
-    
+
   storage.set('cultiva-settings', settings);
-  localStorage.setItem('cultiva-settings', JSON.stringify(settings));
-  localStorage.setItem('cultiva-lang', settings.lang);
-  localStorage.setItem('cultiva-theme', settings.theme);
-  localStorage.setItem('cultiva-holiday-region', settings.holidayRegion || 'us'); 
-    
+  
   currentLang = settings.lang;
   currentT = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
-    
-  console.log('Saved settings (after):', settings);
-    
+  
   applySettings();
   renderGarden();
 }
@@ -212,31 +262,37 @@ function handleHolidayChange(e) {
 }
 
 function applySettings() {
-  if (langSelect) { langSelect.value = settings.lang; }
+  if (langSelect) { 
+    langSelect.value = settings.lang; 
+    // Принудительно триггерим, если значение не применилось
+    if (langSelect.value !== settings.lang) langSelect.value = settings.lang; 
+  }
   applyTranslations(settings.lang);
-    
+  
   document.body.classList.remove(
     'theme-light', 'theme-dark', 'theme-pink', 'theme-moon',
     'theme-evergreen', 'theme-blossom', 'theme-ocean', 'theme-sunset',
     'theme-frost', 'theme-cedar', 'theme-dusk', 'theme-meadow'
   );
-    
+  
   let appliedTheme = settings.theme;
   if (appliedTheme === 'auto') {
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     appliedTheme = prefersDark ? 'dark' : 'light';
   }
-    
+  
   document.body.classList.add(`theme-${appliedTheme}`);
-    
-  if (themeSelect) { themeSelect.value = settings.theme; }
-    
+  
+  if (themeSelect) { 
+    themeSelect.value = settings.theme; 
+  }
+  
   const trophySection = document.getElementById('trophy-section');
   if (trophySection) { trophySection.classList.toggle('hidden', !settings.showTrophies); }
   if (trophyToggle) { trophyToggle.checked = settings.showTrophies; }
   document.body.classList.toggle('focus-mode', settings.focusMode);
   if (focusToggle) { focusToggle.checked = settings.focusMode; }
-    
+  
   const holidaySelect = document.getElementById('holiday-select');
   if (holidaySelect) {
     holidaySelect.value = settings.holidayRegion || 'us';
@@ -246,10 +302,14 @@ function applySettings() {
   
   const pluginsToggle = document.getElementById('toggle-plugins');
   if (pluginsToggle) { pluginsToggle.checked = settings.pluginsEnabled; }
-    
+  
   renderHeaderAvatar();
+  
+  // +++ СИНХРОНИЗИРУЕМ С LOCALSTORAGE +++
+  localStorage.setItem('cultiva-theme', settings.theme);
+  localStorage.setItem('cultiva-lang', settings.lang);
+  console.log('[Settings] Applied theme:', appliedTheme);
 }
-
 /* ============================================ */
 /* i18n                                         */
 /* ============================================ */
@@ -677,15 +737,20 @@ function renderPluginHeaderItems() {
         <span>${pluginData.headerItem.label}</span>
       `;
       
-      // +++ ИСПРАВЛЯЕМ КЛИК +++
       item.onclick = () => {
-        const instance = pluginData.instance;
-        if (instance && typeof instance.openWeatherModal === 'function') {
-          instance.openWeatherModal();
-        } else if (pluginData.headerItem.onClick) {
-          pluginData.headerItem.onClick();
-        } else {
-          console.warn('[Plugin] No click handler found for', plugin.id);
+        const hi = pluginData.headerItem;
+        
+
+        if (hi.instance && hi.modalMethod && typeof hi.instance[hi.modalMethod] === 'function') {
+          hi.instance[hi.modalMethod]();
+        }
+
+        else if (hi.onClick) {
+          hi.onClick.call(hi.instance);
+        }
+
+        else {
+          console.warn('[Click] No method found for', plugin.id);
         }
       };
       
@@ -694,7 +759,6 @@ function renderPluginHeaderItems() {
     }
   });
 }
-
 /* ============================================ */
 /* PROFILE MANAGEMENT                           */
 /* ============================================ */
@@ -1807,33 +1871,33 @@ if (typeof window.electron !== 'undefined' && window.electron.onUpdateMessage) {
 
 async function init() {
   try {
-    await storage.init();
-    await auth.init();
-    applyBranding();
+
+    await ensureAppReady();
+    
     await loadSettings();
+    
+    applyBranding();
     applySettings();
-    
-    // Инициализация плагинов
-    if (settings.pluginsEnabled) {
-      await pluginManager.init();
-    }
-    
     renderGarden();
+    
     initEvents();
     initAvatarPicker();
     initSettingsNavigation();
     initProfileManagement();
-    initDiscordSettings();  
+    initDiscordSettings();
+    
     await updateAuthUI();
     updateCultivaDatePreview();
     updateProfileSection();
     
-    // Рендерим элементы плагинов в шапке
     renderPluginHeaderItems();
     
-    console.log('Cultiva [0.3.5] initialized');
+    console.log(`[App] Cultiva [${BRANDING.VERSION}] initialized successfully`);
   } catch (err) {
-    console.error('Init failed:', err);
+    console.error('[App] Init failed:', err);
+    showNotification('', 'Failed to load app data. Try reloading.');
+  } finally {
+    hideLoading();
   }
 }
 

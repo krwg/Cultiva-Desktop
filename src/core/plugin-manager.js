@@ -12,9 +12,30 @@ let pluginHooks = {
   renderGardenWidget: []
 };
 
+let _initPromise = null;
+let _isInitialized = false;
+
 export const pluginManager = {
   async init() {
+    if (_isInitialized) {
+      console.log('[PluginManager] Already initialized');
+      return _initPromise;
+    }
+    
+    if (_initPromise) {
+      console.log('[PluginManager] Init in progress, waiting...');
+      return _initPromise;
+    }
+    
+    _initPromise = this._doInit();
+    return _initPromise;
+  },
+  
+  async _doInit() {
     console.log('[PluginManager] Initializing...');
+    
+
+    await storage.init();
     
     let installed = await storage.get('cultiva-installed-plugins');
     console.log('[PluginManager] From storage:', installed);
@@ -35,6 +56,7 @@ export const pluginManager = {
     
     await this.triggerHook('onAppStart');
     
+    _isInitialized = true;
     console.log('[PluginManager] Initialized with', plugins.size, 'plugins');
   },
   
@@ -81,8 +103,26 @@ export const pluginManager = {
         await pluginInstance.onEnable();
       }
       
+
+      await new Promise(resolve => setTimeout(resolve, 50));
+      
+      const plugin = plugins.get(pluginId);
+      
+
+      if (plugin?.gardenWidget && typeof plugin.gardenWidget.render === 'function') {
+        setTimeout(() => {
+          const container = document.getElementById('garden-container');
+          if (container) {
+            const oldWidget = document.getElementById(`${pluginId}-garden-widget`);
+            if (oldWidget) oldWidget.remove();
+            plugin.gardenWidget.render(container);
+          }
+        }, 200);
+      }
+      
       console.log('[PluginManager] Loaded plugin:', manifest.name, 'v' + manifest.version);
       
+      // Вызываем рендер шапки
       if (typeof window.renderPluginHeaderItems === 'function') {
         setTimeout(() => window.renderPluginHeaderItems(), 100);
       }
@@ -139,14 +179,33 @@ export const pluginManager = {
     const plugin = plugins.get(pluginId);
     if (!plugin) return;
     
+    const instance = plugin.instance;
+    let modalMethod = null;
+    
+    if (instance && typeof instance.openWeatherModal === 'function') {
+      modalMethod = 'openWeatherModal';
+    } else if (instance && typeof instance.openSettingsModal === 'function') {
+      modalMethod = 'openSettingsModal';
+    } else if (instance && typeof instance.openRadioModal === 'function') {
+      modalMethod = 'openRadioModal';
+    } else if (instance && typeof instance.openModal === 'function') {
+      modalMethod = 'openModal';
+    }
+    
     plugin.headerItem = {
       id: `${pluginId}-header`,
       label: config.label || plugin.manifest.name,
       icon: config.icon || plugin.manifest.icon || '🔌',
+      instance: instance,
+      modalMethod: modalMethod,
       onClick: config.onClick
     };
     
     this.triggerHook('renderHeaderItem', plugin.headerItem);
+    
+    if (typeof window.renderPluginHeaderItems === 'function') {
+      setTimeout(() => window.renderPluginHeaderItems(), 50);
+    }
   },
   
   registerGardenWidget(pluginId, config) {
@@ -154,7 +213,7 @@ export const pluginManager = {
     if (!plugin) return;
     
     plugin.gardenWidget = {
-      id: `${pluginId}-widget`,
+      id: `${pluginId}-garden-widget`,
       render: config.render,
       position: config.position || 'top'
     };
@@ -234,6 +293,9 @@ export const pluginManager = {
       await storage.set('cultiva-installed-plugins', installed);
       localStorage.setItem('cultiva-installed-plugins', JSON.stringify(installed));
     }
+    
+    const widget = document.getElementById(`${pluginId}-garden-widget`);
+    if (widget) widget.remove();
     
     if (typeof window.renderPluginHeaderItems === 'function') {
       window.renderPluginHeaderItems();

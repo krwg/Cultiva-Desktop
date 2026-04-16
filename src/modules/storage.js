@@ -10,6 +10,7 @@ const SESSION_KEY = 'cultiva_current_session';
 let _habitsCache = [];
 let _settingsCache = {};
 let _isInitialized = false;
+let _initPromise = null;
 let _currentUserId = null;
 
 /* ============================================ */
@@ -47,7 +48,6 @@ function validateSettings(settings) {
 function migrateHabit(habit) {
   const migrated = { ...habit };
   
-
   if (migrated.streak !== undefined && migrated.currentStreak === undefined) {
     migrated.currentStreak = migrated.streak;
   }
@@ -55,30 +55,24 @@ function migrateHabit(habit) {
     migrated.currentStreak = 0;
   }
   
-
   if (migrated.bestStreak === undefined) {
     migrated.bestStreak = migrated.currentStreak || 0;
   }
   
-
   if (!migrated.history || !Array.isArray(migrated.history)) {
     migrated.history = [];
   }
   
-
   if (!migrated.dailyProgress || typeof migrated.dailyProgress !== 'object') {
     migrated.dailyProgress = {};
   }
   
-
   if (migrated.userId && migrated.userId.includes('@')) {
     migrated.userId = null;
   }
   
-
   delete migrated.streak;
   
-
   migrated.updatedAt = Date.now();
   
   return migrated;
@@ -90,21 +84,31 @@ function migrateHabit(habit) {
 
 export const storage = {
   async init() {
+    // Если уже инициализирован, возвращаем готовый промис
     if (_isInitialized) {
       console.log('[Storage] Already initialized');
-      return;
+      return _initPromise;
     }
-
+    
+    // Если инициализация в процессе, ждём её
+    if (_initPromise) {
+      console.log('[Storage] Init in progress, waiting...');
+      return _initPromise;
+    }
+    
+    _initPromise = this._doInit();
+    return _initPromise;
+  },
+  
+  async _doInit() {
     console.log('[Storage] Initializing...');
     
     try {
       const session = await db.get('sessions', SESSION_KEY);
       if (session && session.email) {
         _currentUserId = session.email;
-        console.log('[Storage] Restored session for:', _currentUserId);
       } else {
         _currentUserId = null;
-        console.log('[Storage] No active session, running as guest');
       }
     } catch (e) {
       console.error('[Storage] Session check failed:', e);
@@ -113,7 +117,19 @@ export const storage = {
 
     await this._loadFromDB();
     
-
+    const localSettings = localStorage.getItem('cultiva-settings');
+    if (localSettings) {
+      try {
+        const parsed = JSON.parse(localSettings);
+        if (parsed && typeof parsed === 'object') {
+          _settingsCache = { ..._settingsCache, ...parsed };
+          console.log('[Storage] Synced settings from localStorage (latest)');
+        }
+      } catch (e) {
+        console.warn('[Storage] Failed to parse localStorage settings:', e);
+      }
+    }
+    
     let needsSave = false;
     _habitsCache = _habitsCache.map(h => {
       const migrated = migrateHabit(h);
@@ -128,21 +144,24 @@ export const storage = {
       await this._forceSaveHabits(_habitsCache);
     }
     
-
     const localHabits = localStorage.getItem('cultiva-habits');
     if (localHabits && _habitsCache.length === 0) {
       try {
         const parsed = JSON.parse(localHabits);
         _habitsCache = parsed.map(migrateHabit);
-        console.log('[Storage] Restored', _habitsCache.length, 'habits from localStorage backup');
         await this._forceSaveHabits(_habitsCache);
       } catch (e) {
-        console.error('[Storage] Failed to restore from localStorage:', e);
+        console.error('[Storage] Failed to restore habits from localStorage:', e);
       }
     }
     
     _isInitialized = true;
     console.log('[Storage] System ready,', _habitsCache.length, 'habits loaded');
+    return _habitsCache;
+  },
+
+  isReady() {
+    return _isInitialized;
   },
 
   async _loadFromDB() {
@@ -150,13 +169,10 @@ export const storage = {
       const allHabits = await db.getAll('habits');
       console.log('[Storage] Raw habits from DB:', allHabits.length);
       
-
       _habitsCache = allHabits.filter(h => {
-
         if (_currentUserId === null) {
           return h.userId === null || h.userId === undefined;
         }
-
         return h.userId === _currentUserId;
       });
       
@@ -165,14 +181,12 @@ export const storage = {
       
       console.log('[Storage] Loaded', _habitsCache.length, 'habits for user:', _currentUserId || 'guest');
       
-
       if (_habitsCache.length > 0) {
         localStorage.setItem('cultiva-habits', JSON.stringify(_habitsCache));
       }
     } catch (e) {
       console.error('[Storage] Failed to load from IndexedDB:', e);
       
-
       const h = localStorage.getItem('cultiva-habits');
       if (h) {
         try {
@@ -209,11 +223,9 @@ export const storage = {
         const tx = dbInstance.transaction('habits', 'readwrite');
         const store = tx.objectStore('habits');
         
-
         const clearRequest = store.clear();
         
         clearRequest.onsuccess = () => {
-
           validHabits.forEach(habit => {
             store.put(habit);
           });
@@ -230,12 +242,10 @@ export const storage = {
         };
       });
       
-
       localStorage.setItem('cultiva-habits', JSON.stringify(validHabits));
       
     } catch (e) {
       console.error('[Storage] Force save failed:', e);
-
       localStorage.setItem('cultiva-habits', JSON.stringify(validHabits));
     }
   },
@@ -245,8 +255,9 @@ export const storage = {
     return _habitsCache; 
   },
   
-  async get(key) { 
-    return _settingsCache[key] || null; 
+   async get(key) { 
+    if (!_isInitialized) await this.init();
+    return _settingsCache[key] ?? null; 
   },
   
   getCurrentUserId() { 
@@ -288,7 +299,6 @@ export const storage = {
         const clearRequest = store.clear();
         
         clearRequest.onsuccess = () => {
-
           myHabits.forEach(habit => {
             store.put(habit);
           });
@@ -305,30 +315,35 @@ export const storage = {
         };
       });
       
-
       localStorage.setItem('cultiva-habits', JSON.stringify(myHabits));
       console.log('[Storage] Backup saved to localStorage');
       
     } catch (e) {
       console.error('[Storage] IndexedDB save failed, using localStorage only:', e);
-
       localStorage.setItem('cultiva-habits', JSON.stringify(myHabits));
       _habitsCache = myHabits;
     }
   },
 
   async set(key, value) {
-    validateSettings({ [key]: value });
+
     _settingsCache[key] = value;
     
     try {
       await db.put('settings', { key, value });
     } catch (e) {
-      console.error('[Storage] Settings IDB write failed:', e);
+      console.warn('[Storage] IDB write failed, using localStorage fallback');
     }
-    localStorage.setItem('cultiva-settings', JSON.stringify(_settingsCache));
-  },
+    
   
+    try {
+      localStorage.setItem('cultiva-settings', JSON.stringify(_settingsCache));
+    } catch (e) {
+      console.error('[Storage] Failed to sync localStorage:', e);
+    }
+  },
+
+
   async clearAll() {
     console.log('[Storage] Clearing all data...');
     _habitsCache = [];

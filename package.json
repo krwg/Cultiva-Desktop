@@ -1,6 +1,6 @@
 {
   "name": "cultiva",
-  "version": "0.3.5",
+  "version": "0.3.6",
   "description": "Grow your habits. Grow yourself.",
   "main": "electron/main.cjs",
   "type": "module",

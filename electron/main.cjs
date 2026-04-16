@@ -225,6 +225,9 @@ function createWindow() {
     return { action: 'allow' };
   });
 
+
+  mainWindow.webContents.openDevTools({ mode: 'detach' });
+
   mainWindow.webContents.on('will-navigate', (event, navigationUrl) => {
     try {
       const parsedUrl = new URL(navigationUrl);
@@ -267,7 +270,7 @@ mainWindow.webContents.session.webRequest.onHeadersReceived((details, callback) 
         "default-src 'self' 'unsafe-inline' 'unsafe-eval' file: data:; " +
         "img-src 'self' data: blob: file: https:; " +
         "style-src 'self' 'unsafe-inline'; " +
-        "connect-src 'self' https://raw.githubusercontent.com https://api.github.com https://github.com https://api.open-meteo.com; " +  
+        "connect-src 'self' https://raw.githubusercontent.com https://api.github.com https://github.com https://api.open-meteo.com https://geocoding-api.open-meteo.com; " +
         "font-src 'self' data:;"
       ]
     }
