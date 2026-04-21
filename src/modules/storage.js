@@ -84,13 +84,13 @@ function migrateHabit(habit) {
 
 export const storage = {
   async init() {
-    // Если уже инициализирован, возвращаем готовый промис
+
     if (_isInitialized) {
       console.log('[Storage] Already initialized');
       return _initPromise;
     }
     
-    // Если инициализация в процессе, ждём её
+
     if (_initPromise) {
       console.log('[Storage] Init in progress, waiting...');
       return _initPromise;
